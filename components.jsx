@@ -1926,7 +1926,8 @@ const BuatSuratBaru = ({ onBack, onSubmit, readOnly, surat, onWithdraw }) => {
 // REVIEWER & APPROVER PAGES
 // ─────────────────────────────────────────────
 
-const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onAction, onOpenLetter }) => {
+const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onAction, onOpenLetter, currentUserId }) => {
+  const ME = currentUserId || CURRENT_USER_ID;
   const [search, setSearch]   = React.useState('');
   const [sifatF, setSifatF]   = React.useState('all');
   const [kecF, setKecF]       = React.useState('all');
@@ -1959,7 +1960,7 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
     let approveMsg = `Surat ${judulShort} diteruskan ke tahap Approval.`;
     if (action === 'approve' && surat?.reviewers) {
       const updatedReviewers = surat.reviewers.map(r =>
-        r.id === CURRENT_USER_ID ? { ...r, reviewStatus: 'approved' } : r
+        r.id === ME ? { ...r, reviewStatus: 'approved' } : r
       );
       const allApproved = updatedReviewers.every(r => r.reviewStatus === 'approved');
       approveMsg = allApproved
@@ -2127,7 +2128,7 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
                                     color: r.reviewStatus === 'approved' ? '#118D57' : r.reviewStatus === 'rejected' ? '#B71D18' : 'var(--text-secondary)',
                                     flexShrink: 0,
                                   }}>
-                                  {r.id === CURRENT_USER_ID ? '★' : (idx + 1)}
+                                  {r.id === ME ? '★' : (idx + 1)}
                                 </div>
                               ))}
                             </div>
@@ -2156,7 +2157,7 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
         const approvers = confirmSurat?.approvers || [];
         // Simulate post-action reviewer statuses for display
         const previewReviewers = confirm.action === 'approve'
-          ? reviewers.map(r => r.id === CURRENT_USER_ID ? { ...r, reviewStatus: 'approved' } : r)
+          ? reviewers.map(r => r.id === ME ? { ...r, reviewStatus: 'approved' } : r)
           : reviewers;
         const allWouldApprove = previewReviewers.every(r => r.reviewStatus === 'approved');
         return (
@@ -2190,7 +2191,7 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
                     <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rantai Persetujuan</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 0, overflowX: 'auto', paddingBottom: 4 }}>
                       {previewReviewers.map((r, idx) => {
-                        const isMe = r.id === CURRENT_USER_ID;
+                        const isMe = r.id === ME;
                         const st = r.reviewStatus;
                         const dotColor = st === 'approved' ? '#118D57' : st === 'rejected' ? '#B71D18' : '#B76E00';
                         const dotBg   = st === 'approved' ? '#D3F5E3' : st === 'rejected' ? '#FFDAD5' : '#FFF0CC';
@@ -2265,21 +2266,18 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
   );
 };
 
-const ReviewerPage = ({ suratList, onAction }) => {
-  // Only show surat where the current user is an assigned reviewer with pending status
+const ReviewerPage = ({ suratList, onAction, currentUserId }) => {
+  const ME = currentUserId || CURRENT_USER_ID;
   const toReview = suratList.filter(s =>
     s.status === 'menunggu-review' &&
-    (s.reviewers || []).some(r => r.id === CURRENT_USER_ID && r.reviewStatus === 'pending')
+    (s.reviewers || []).some(r => r.id === ME && r.reviewStatus === 'pending')
   );
-
-  // All surat in menunggu-review where current user is involved (for KPI awareness)
   const allInReview = suratList.filter(s => s.status === 'menunggu-review');
-
   const counts = {
     total: toReview.length,
     sangatSegera: toReview.filter(s => s.kecepatan === 'sangat-segera').length,
     selesaiReview: allInReview.filter(s =>
-      (s.reviewers || []).find(r => r.id === CURRENT_USER_ID)?.reviewStatus === 'approved'
+      (s.reviewers || []).find(r => r.id === ME)?.reviewStatus === 'approved'
     ).length,
   };
 
@@ -2296,12 +2294,11 @@ const ReviewerPage = ({ suratList, onAction }) => {
         </div>
       </div>
 
-      {/* KPI cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 0 }}>
         {[
-          { label: 'Perlu Ditinjau',  value: counts.total,          icon: 'eye',   color: 'amber', sub: 'menunggu review Anda' },
-          { label: 'Sangat Segera',   value: counts.sangatSegera,   icon: 'info',  color: 'red',   sub: 'prioritas tinggi'     },
-          { label: 'Sudah Disetujui', value: counts.selesaiReview,  icon: 'check', color: 'green', sub: 'oleh Anda (belum all)'},
+          { label: 'Perlu Ditinjau',  value: counts.total,         icon: 'eye',   color: 'amber', sub: 'menunggu review Anda' },
+          { label: 'Sangat Segera',   value: counts.sangatSegera,  icon: 'info',  color: 'red',   sub: 'prioritas tinggi'     },
+          { label: 'Sudah Disetujui', value: counts.selesaiReview, icon: 'check', color: 'green', sub: 'oleh Anda (belum all)'},
         ].map((s, i) => (
           <div className="card kpi" key={i}>
             <div className="kpi-head"><div className={`kpi-icon ${s.color}`}><Icon name={s.icon} size={24} strokeWidth={1.6}/></div></div>
@@ -2314,7 +2311,7 @@ const ReviewerPage = ({ suratList, onAction }) => {
 
       <div style={{ padding: '12px 16px', background: 'var(--warning-bg)', borderRadius: 12, display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: '#7A4F00' }}>
         <Icon name="info" size={16} strokeWidth={2} color="#B76E00" style={{ flexShrink: 0, marginTop: 1 }}/>
-        <span>Sebagai <b>Reviewer</b>, tugas Anda adalah memeriksa kelengkapan dan kesesuaian isi surat sebelum diteruskan ke Approver. Surat baru pindah ke tahap Approval setelah <b>semua reviewer menyetujui</b>. Klik <b>Setujui Review</b> atau <b>Tolak</b> untuk setiap surat.</span>
+        <span>Sebagai <b>Reviewer</b>, tugas Anda adalah memeriksa kelengkapan dan kesesuaian isi surat sebelum diteruskan ke Approver. Surat baru pindah ke tahap Approval setelah <b>semua reviewer menyetujui</b>.</span>
       </div>
 
       <SuratWorkflowTable
@@ -2324,13 +2321,18 @@ const ReviewerPage = ({ suratList, onAction }) => {
         suratList={toReview}
         mode="reviewer"
         onAction={onAction}
+        currentUserId={ME}
       />
     </div>
   );
 };
 
-const ApproverPage = ({ suratList, onAction }) => {
-  const toApprove = suratList.filter(s => s.status === 'menunggu-approval');
+const ApproverPage = ({ suratList, onAction, currentUserId }) => {
+  const ME = currentUserId || CURRENT_USER_ID;
+  const toApprove = suratList.filter(s =>
+    s.status === 'menunggu-approval' &&
+    (s.approvers || []).some(a => a.id === ME)
+  );
   const counts = {
     total: toApprove.length,
     sangatSegera: toApprove.filter(s => s.kecepatan === 'sangat-segera').length,
@@ -2350,7 +2352,6 @@ const ApproverPage = ({ suratList, onAction }) => {
         </div>
       </div>
 
-      {/* Info banner */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 0 }}>
         {[
           { label: 'Menunggu Approval', value: counts.total,        icon: 'check',  color: 'blue',  sub: 'surat perlu disetujui' },
@@ -2378,7 +2379,89 @@ const ApproverPage = ({ suratList, onAction }) => {
         suratList={toApprove}
         mode="approver"
         onAction={onAction}
+        currentUserId={ME}
       />
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+// POV SWITCHER (demo floating button)
+// ─────────────────────────────────────────────
+const POV_OPTIONS = [
+  { id: 'SD-00001', name: 'Sri Dewanti',      init: 'SD', role: 'Reviewer 1 · VP Human Capital',          color: '#00753E', bg: '#EBF6F0' },
+  { id: '2611582',  name: 'Linda Kurniawati', init: 'LK', role: 'Reviewer 2 · VP Legal & Compliance',     color: '#0E7AC0', bg: '#E8F2FA' },
+  { id: '2511437',  name: 'Dr. Indra Permana',init: 'IP', role: 'Approver · Dir. Operasi & Produksi',     color: '#B76E00', bg: '#FFF7E6' },
+];
+
+const PovSwitcher = ({ povUserId, onChange }) => {
+  const [open, setOpen] = React.useState(false);
+  const current = POV_OPTIONS.find(p => p.id === povUserId) || POV_OPTIONS[0];
+
+  return (
+    <div style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 600, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+      {/* Option cards (shown when open) */}
+      {open && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2, marginRight: 4 }}>
+            Ganti POV
+          </div>
+          {POV_OPTIONS.map(p => {
+            const active = p.id === povUserId;
+            return (
+              <button key={p.id} onClick={() => { onChange(p.id); setOpen(false); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 14px', borderRadius: 14,
+                  background: active ? p.bg : 'white',
+                  border: `2px solid ${active ? p.color : 'var(--border)'}`,
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                  minWidth: 240,
+                }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: p.color, display: 'grid', placeItems: 'center',
+                  color: 'white', fontSize: 12, fontWeight: 700, flexShrink: 0,
+                }}>{p.init}</div>
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <div style={{ fontSize: 13, fontWeight: active ? 700 : 500, color: 'var(--text)' }}>{p.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 1 }}>{p.role}</div>
+                </div>
+                {active && (
+                  <div style={{ width: 20, height: 20, borderRadius: '50%', background: p.color, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                    <Icon name="check" size={11} strokeWidth={3} color="white"/>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Main FAB */}
+      <button onClick={() => setOpen(o => !o)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 18px 10px 10px', borderRadius: 999,
+          background: current.color, border: 'none',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+          cursor: 'pointer', color: 'white', transition: 'all 0.15s',
+        }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.25)',
+          display: 'grid', placeItems: 'center',
+          fontSize: 12, fontWeight: 700,
+        }}>{current.init}</div>
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ fontSize: 10, opacity: 0.8, lineHeight: 1 }}>POV Aktif</div>
+          <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2 }}>{current.name}</div>
+        </div>
+        <div style={{ marginLeft: 4, opacity: 0.8, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+          <Icon name="chevd" size={16} color="white"/>
+        </div>
+      </button>
     </div>
   );
 };

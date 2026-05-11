@@ -29,6 +29,7 @@ function App() {
   const [suratList, setSuratList] = React.useState(SURAT);
   const [openedSurat, setOpenedSurat] = React.useState(null);
   const [flash, setFlash] = React.useState(null);
+  const [povUserId, setPovUserId] = React.useState(CURRENT_USER_ID);
   React.useEffect(() => { applyPalette(t.palette); }, [t.palette]);
 
   React.useEffect(() => {
@@ -61,14 +62,14 @@ function App() {
       if (s.id !== id) return s;
       if (action === 'approve') {
         const updatedReviewers = (s.reviewers || []).map(r =>
-          r.id === CURRENT_USER_ID ? { ...r, reviewStatus: 'approved' } : r
+          r.id === povUserId ? { ...r, reviewStatus: 'approved' } : r
         );
         const allApproved = updatedReviewers.every(r => r.reviewStatus === 'approved');
         return { ...s, reviewers: updatedReviewers, status: allApproved ? 'menunggu-approval' : 'menunggu-review' };
       }
       if (action === 'reject') {
         const updatedReviewers = (s.reviewers || []).map(r =>
-          r.id === CURRENT_USER_ID ? { ...r, reviewStatus: 'rejected' } : r
+          r.id === povUserId ? { ...r, reviewStatus: 'rejected' } : r
         );
         return { ...s, reviewers: updatedReviewers, status: 'draft' };
       }
@@ -146,8 +147,8 @@ function App() {
         </>
       );
     }
-    if (activeView === 'reviewer')        return <ReviewerPage suratList={suratList} onAction={handleReviewerAction}/>;
-    if (activeView === 'approver')        return <ApproverPage suratList={suratList} onAction={handleApproverAction}/>;
+    if (activeView === 'reviewer')        return <ReviewerPage suratList={suratList} onAction={handleReviewerAction} currentUserId={povUserId}/>;
+    if (activeView === 'approver')        return <ApproverPage suratList={suratList} onAction={handleApproverAction} currentUserId={povUserId}/>;
     if (activeView === 'inbox')           return <InboxPage/>;
     if (activeView === 'notif')           return <NotifikasiPage/>;
     if (activeView === 'profil-saya')     return <ProfilSayaPage/>;
@@ -388,6 +389,10 @@ function App() {
           {renderContent()}
         </div>
       </main>
+
+      {!isFocusMode && (
+        <PovSwitcher povUserId={povUserId} onChange={setPovUserId}/>
+      )}
 
       {!isFocusMode && (
         <TweaksPanel>
