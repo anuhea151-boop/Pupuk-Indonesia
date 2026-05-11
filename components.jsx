@@ -1568,74 +1568,76 @@ const BuatSuratBaru = ({ onBack, onSubmit, readOnly, surat, onWithdraw }) => {
   return (
     <div className={`surat-form${readOnly ? ' surat-form-readonly' : ''}`} style={{ maxWidth: 1100, margin: '0 auto', width: '100%' }}>
       {/* Header */}
-      <div className="surat-form-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <button className="back" onClick={onBack} title="Kembali"><Icon name="chevl" size={20}/></button>
-          <div>
-            <h1>{readOnly ? 'Detail Surat' : 'Buat Surat Baru'}</h1>
-            <div className="crumbs">
-              <span>Pupuk Indonesia</span>
-              <span className="sep"></span>
-              <span>Manajemen Surat</span>
-              <span className="sep"></span>
-              <span className="now">{readOnly ? `Detail · ${surat && surat.no ? surat.no : ''}` : 'Buat Surat Baru'}</span>
+      <div className={`surat-form-header${readOnly && surat ? ' has-tabs' : ''}`}>
+        <div className="surat-form-header-top">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <button className="back" onClick={onBack} title="Kembali"><Icon name="chevl" size={20}/></button>
+            <div>
+              <h1>{readOnly ? 'Detail Surat' : 'Buat Surat Baru'}</h1>
+              <div className="crumbs">
+                <span>Pupuk Indonesia</span>
+                <span className="sep"></span>
+                <span>Manajemen Surat</span>
+                <span className="sep"></span>
+                <span className="now">{readOnly ? `Detail · ${surat && surat.no ? surat.no : ''}` : 'Buat Surat Baru'}</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          {readOnly && awaitingReviewWithdraw ? (
-            !confirmWithdrawDetail ? (
-              <button type="button" className="btn btn-danger" onClick={() => setConfirmWithdrawDetail(true)}>
-                <Icon name="x" size={14} strokeWidth={2.4}/> Tarik Kembali Surat
-              </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {readOnly && awaitingReviewWithdraw ? (
+              !confirmWithdrawDetail ? (
+                <button type="button" className="btn btn-danger" onClick={() => setConfirmWithdrawDetail(true)}>
+                  <Icon name="x" size={14} strokeWidth={2.4}/> Tarik Kembali Surat
+                </button>
+              ) : (
+                <>
+                  <span style={{ fontSize: 13, color: 'var(--text-secondary)', marginRight: 4 }}>
+                    Tarik surat ini? Status menjadi <b>Draft</b>.
+                  </span>
+                  <button type="button" className="btn btn-secondary" onClick={() => setConfirmWithdrawDetail(false)}>
+                    Batal
+                  </button>
+                  <button type="button" className="btn btn-danger" onClick={handleWithdrawFromDetail}>
+                    <Icon name="check" size={14} strokeWidth={2.4}/> Ya, Tarik Kembali
+                  </button>
+                </>
+              )
+            ) : readOnly ? (
+              <button type="button" className="btn btn-secondary" onClick={onBack}><Icon name="chevl" size={14}/> Kembali</button>
             ) : (
               <>
-                <span style={{ fontSize: 13, color: 'var(--text-secondary)', marginRight: 4 }}>
-                  Tarik surat ini? Status menjadi <b>Draft</b>.
-                </span>
-                <button type="button" className="btn btn-secondary" onClick={() => setConfirmWithdrawDetail(false)}>
-                  Batal
+                <button className="btn btn-ghost" onClick={onBack} disabled={submitting}>Batal</button>
+                <button className="btn btn-secondary" onClick={handleSaveDraft} disabled={submitting}>
+                  <Icon name="download" size={14}/> Simpan Draft
                 </button>
-                <button type="button" className="btn btn-danger" onClick={handleWithdrawFromDetail}>
-                  <Icon name="check" size={14} strokeWidth={2.4}/> Ya, Tarik Kembali
+                <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
+                  <Icon name="check" size={14}/> {submitting ? 'Menyubmit…' : 'Submit Surat'}
                 </button>
               </>
-            )
-          ) : readOnly ? (
-            <button type="button" className="btn btn-secondary" onClick={onBack}><Icon name="chevl" size={14}/> Kembali</button>
-          ) : (
-            <>
-              <button className="btn btn-ghost" onClick={onBack} disabled={submitting}>Batal</button>
-              <button className="btn btn-secondary" onClick={handleSaveDraft} disabled={submitting}>
-                <Icon name="download" size={14}/> Simpan Draft
-              </button>
-              <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
-                <Icon name="check" size={14}/> {submitting ? 'Menyubmit…' : 'Submit Surat'}
-              </button>
-            </>
-          )}
+            )}
+          </div>
         </div>
-      </div>
 
-      {readOnly && surat && (
-        <div className="surat-form-tabs">
-          {[
-            { key: 'surat', label: 'Detail Surat' },
-            { key: 'history', label: 'History' },
-            { key: 'doc-history', label: 'Doc History' },
-            { key: 'hierarchy', label: 'Hierarchy' },
-          ].map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              className={`surat-tab${detailTab === t.key ? ' on' : ''}`}
-              onClick={() => setDetailTab(t.key)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      )}
+        {readOnly && surat && (
+          <div className="surat-form-tabs">
+            {[
+              { key: 'surat',       label: 'Detail Surat' },
+              { key: 'history',     label: 'History'      },
+              { key: 'doc-history', label: 'Doc History'  },
+              { key: 'hierarchy',   label: 'Hierarchy'    },
+            ].map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                className={`surat-tab${detailTab === t.key ? ' on' : ''}`}
+                onClick={() => setDetailTab(t.key)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {!readOnly && (
       <div className="surat-alert">

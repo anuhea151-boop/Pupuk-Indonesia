@@ -933,13 +933,17 @@ table { border-collapse: collapse; }
 .surat-form { display: flex; flex-direction: column; gap: 24px; }
 
 .surat-form-header {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 16px;
-  padding: 16px 24px;
+  display: flex; flex-direction: column;
   background: var(--card);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   position: sticky; top: 80px; z-index: 5;
+  overflow: hidden;
+}
+.surat-form-header-top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
 }
 .surat-form-header .back {
   width: 40px; height: 40px; border-radius: 10px;
@@ -966,30 +970,32 @@ table { border-collapse: collapse; }
 .surat-form-header .crumbs .now { color: var(--text); font-weight: 600; }
 
 .surat-form-tabs {
-  display: flex; flex-wrap: wrap; gap: 8px;
+  display: flex;
   padding: 0 24px;
-  align-items: center;
+  border-top: 1px solid var(--border-soft);
+  gap: 0;
 }
 .surat-tab {
-  padding: 8px 16px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--card);
+  padding: 13px 20px;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  border-top: none; border-left: none; border-right: none;
+  background: transparent;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
 }
 .surat-tab:hover {
-  border-color: var(--text-disabled);
   color: var(--text);
   background: var(--hover);
 }
 .surat-tab.on {
-  border-color: var(--primary);
-  background: var(--primary-50);
-  color: var(--primary-dark);
+  border-bottom-color: var(--text);
+  color: var(--text);
+  background: transparent;
 }
 
 .surat-form-readonly .inp:disabled,
