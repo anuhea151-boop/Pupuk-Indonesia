@@ -443,15 +443,11 @@ const DateRangeField = ({ from, to, onChange }) => {
 
 const SuratTable = ({ onNav, suratList, onWithdraw, onOpenLetter }) => {
   const data = suratList || SURAT;
-  const [tab, setTab] = React.useState('all');
   const [search, setSearch] = React.useState('');
   const [sifatFilter, setSifatFilter] = React.useState('all');
   const [kecepatanFilter, setKecepatanFilter] = React.useState('all');
   const [dateRange, setDateRange] = React.useState({ from: '', to: '' });
   const [detailOpen, setDetailOpen] = React.useState(null);
-
-  const filters = ['all', 'draft', 'menunggu-review', 'menunggu-approval'];
-  const filterLbl = { all: 'Semua', 'draft': 'Draft', 'menunggu-review': 'Menunggu Review', 'menunggu-approval': 'Menunggu Approval' };
 
   // Sinkronkan detail modal dengan data terbaru (mis. setelah Tarik Kembali → status berubah)
   React.useEffect(() => {
@@ -461,7 +457,6 @@ const SuratTable = ({ onNav, suratList, onWithdraw, onOpenLetter }) => {
   }, [data, detailOpen]);
 
   let filtered = data;
-  if (tab !== 'all') filtered = filtered.filter(s => s.status === tab);
   if (sifatFilter !== 'all') filtered = filtered.filter(s => s.sifat === sifatFilter);
   if (kecepatanFilter !== 'all') filtered = filtered.filter(s => s.kecepatan === kecepatanFilter);
   if (dateRange.from || dateRange.to) {
@@ -491,11 +486,6 @@ const SuratTable = ({ onNav, suratList, onWithdraw, onOpenLetter }) => {
     s.pembuat.toLowerCase().includes(search.toLowerCase())
   );
 
-  const counts = filters.reduce((acc, f) => {
-    acc[f] = f === 'all' ? data.length : data.filter((e) => e.status === f).length;
-    return acc;
-  }, {});
-
   return (
     <>
     <div className="card" style={{ overflow: 'hidden' }}>
@@ -507,26 +497,6 @@ const SuratTable = ({ onNav, suratList, onWithdraw, onOpenLetter }) => {
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn btn-secondary"><Icon name="download" size={14} /> Export</button>
           <button className="btn btn-primary" onClick={() => onNav && onNav('buat-surat-baru')}><Icon name="plus" size={14} /> Buat Surat Baru</button>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ padding: '0 24px', borderBottom: '1px solid var(--border-soft)' }}>
-        <div style={{ display: 'flex', gap: 32 }}>
-          {filters.map((f) =>
-            <button key={f} onClick={() => setTab(f)}
-              style={{
-                padding: '14px 0',
-                borderBottom: tab === f ? '2px solid var(--text)' : '2px solid transparent',
-                color: tab === f ? 'var(--text)' : 'var(--text-secondary)',
-                fontSize: 13, fontWeight: 600,
-                display: 'flex', alignItems: 'center', gap: 8,
-                whiteSpace: 'nowrap',
-                transition: 'color 0.15s' }}>
-              {filterLbl[f]}
-              <span className={`chip ${tab === f ? 'solid' : 'gray'}`} style={{ fontSize: 11 }}>{counts[f]}</span>
-            </button>
-          )}
         </div>
       </div>
 
