@@ -29,7 +29,7 @@ function App() {
   const [suratList, setSuratList] = React.useState(SURAT);
   const [openedSurat, setOpenedSurat] = React.useState(null);
   const [flash, setFlash] = React.useState(null);
-  const [povUserId, setPovUserId] = React.useState(CURRENT_USER_ID);
+  const [povUserId, setPovUserId] = React.useState(POV_OPTIONS[0]?.id || CURRENT_USER_ID);
   React.useEffect(() => { applyPalette(t.palette); }, [t.palette]);
 
   React.useEffect(() => {

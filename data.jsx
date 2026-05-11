@@ -139,8 +139,8 @@ const STATUS_SURAT_CHIP = {
   'dibatalkan':         { lbl: 'Dibatalkan',         cls: 'red'   },
 };
 
-// ID pengguna yang sedang login (Sri Dewanti — VP Human Capital)
-const CURRENT_USER_ID = 'SD-00001';
+// ID pengguna Reviewer 1 aktif (Yetty Endarwati — SVP Digitalisasi & Data Science)
+const CURRENT_USER_ID = '1120084';
 
 // Pemetaan nama pembuat surat → ID pegawai
 const PEMBUAT_ID_MAP = {
@@ -165,8 +165,8 @@ const SURAT = [
     sifat: 'biasa', kecepatan: 'segera', status: 'menunggu-approval',
     tanggal: '10 Mei 2026', pembuat: 'Ahmad Fauzi', av: 4, init: 'AF',
     reviewers: [
-      { id: CURRENT_USER_ID, name: 'Sri Dewanti',      role: 'VP Human Capital',          reviewStatus: 'approved' },
-      { id: '1120084',        name: 'Yetty Endarwati',  role: 'SVP Digitalisasi & Data Science', reviewStatus: 'approved' },
+      { id: CURRENT_USER_ID, name: 'Yetty Endarwati',  role: 'SVP Digitalisasi & Data Science', reviewStatus: 'approved' },
+      { id: '2811854',        name: 'Anita Wijayanti',  role: 'SVP Sumber Daya Manusia',         reviewStatus: 'approved' },
     ],
     approvers: [{ id: '2511437', name: 'Dr. Indra Permana', role: 'Direktur Operasi & Produksi', approveStatus: 'pending' }],
   },
@@ -183,7 +183,7 @@ const SURAT = [
     sifat: 'sangat-rahasia', kecepatan: 'sangat-segera', status: 'menunggu-review',
     tanggal: '09 Mei 2026', pembuat: 'Cahyo Nugroho', av: 6, init: 'CN',
     reviewers: [
-      { id: CURRENT_USER_ID, name: 'Sri Dewanti',      role: 'VP Human Capital',        reviewStatus: 'pending'  },
+      { id: CURRENT_USER_ID, name: 'Yetty Endarwati',      role: 'SVP Digitalisasi & Data Science',        reviewStatus: 'pending'  },
       { id: '2611582',        name: 'Linda Kurniawati', role: 'VP Legal & Compliance',   reviewStatus: 'pending'  },
     ],
     approvers: [{ id: '2511437', name: 'Dr. Indra Permana', role: 'Direktur Operasi & Produksi', approveStatus: 'pending' }],
@@ -194,7 +194,7 @@ const SURAT = [
     sifat: 'rahasia', kecepatan: 'segera', status: 'menunggu-approval',
     tanggal: '08 Mei 2026', pembuat: 'Putri Maharani', av: 4, init: 'PM',
     reviewers: [
-      { id: CURRENT_USER_ID, name: 'Sri Dewanti',      role: 'VP Human Capital',              reviewStatus: 'approved' },
+      { id: CURRENT_USER_ID, name: 'Yetty Endarwati',      role: 'SVP Digitalisasi & Data Science',              reviewStatus: 'approved' },
       { id: '1210019',        name: 'Muhammad Ridha Fahlawy', role: 'VP Digitalisasi',         reviewStatus: 'approved' },
     ],
     approvers: [{ id: '2511437', name: 'Dr. Indra Permana', role: 'Direktur Operasi & Produksi', approveStatus: 'pending' }],
@@ -205,7 +205,7 @@ const SURAT = [
     sifat: 'biasa', kecepatan: 'biasa', status: 'menunggu-approval',
     tanggal: '08 Mei 2026', pembuat: 'Dewi Lestari', av: 5, init: 'DL',
     reviewers: [
-      { id: CURRENT_USER_ID, name: 'Sri Dewanti',     role: 'VP Human Capital',                reviewStatus: 'approved' },
+      { id: CURRENT_USER_ID, name: 'Yetty Endarwati',     role: 'SVP Digitalisasi & Data Science',                reviewStatus: 'approved' },
       { id: '2811854',        name: 'Anita Wijayanti', role: 'SVP Sumber Daya Manusia',         reviewStatus: 'approved' },
     ],
     approvers: [{ id: '2511437', name: 'Dr. Indra Permana', role: 'Direktur Operasi & Produksi', approveStatus: 'pending' }],
@@ -216,7 +216,7 @@ const SURAT = [
     sifat: 'terbatas', kecepatan: 'segera', status: 'menunggu-review',
     tanggal: '07 Mei 2026', pembuat: 'Lestari Wibowo', av: 5, init: 'LW',
     reviewers: [
-      { id: CURRENT_USER_ID, name: 'Sri Dewanti',           role: 'VP Human Capital',      reviewStatus: 'approved' },
+      { id: CURRENT_USER_ID, name: 'Yetty Endarwati',           role: 'SVP Digitalisasi & Data Science',      reviewStatus: 'approved' },
       { id: '1410512',        name: 'Ahmad Fauzi',           role: 'Lead Engineer IT',      reviewStatus: 'pending'  },
     ],
     approvers: [{ id: '2611582', name: 'Linda Kurniawati', role: 'VP Legal & Compliance', approveStatus: 'pending' }],
@@ -227,7 +227,7 @@ const SURAT = [
     sifat: 'biasa', kecepatan: 'biasa', status: 'menunggu-approval',
     tanggal: '07 Mei 2026', pembuat: 'Hendra Setiawan', av: 6, init: 'HS',
     reviewers: [
-      { id: CURRENT_USER_ID, name: 'Sri Dewanti',     role: 'VP Human Capital',   reviewStatus: 'approved' },
+      { id: CURRENT_USER_ID, name: 'Yetty Endarwati',     role: 'SVP Digitalisasi & Data Science',   reviewStatus: 'approved' },
       { id: '2711729',        name: 'Rahmat Hidayat',  role: 'GM Pemasaran',       reviewStatus: 'approved' },
     ],
     approvers: [{ id: '2511437', name: 'Dr. Indra Permana', role: 'Direktur Operasi & Produksi', approveStatus: 'pending' }],
@@ -246,7 +246,7 @@ const SURAT = [
     tanggal: '06 Mei 2026', pembuat: 'Maya Putri', av: 1, init: 'MP',
     reviewers: [
       { id: '2711729',        name: 'Rahmat Hidayat',  role: 'GM Pemasaran',             reviewStatus: 'approved' },
-      { id: CURRENT_USER_ID, name: 'Sri Dewanti',      role: 'VP Human Capital',         reviewStatus: 'pending'  },
+      { id: CURRENT_USER_ID, name: 'Yetty Endarwati',      role: 'SVP Digitalisasi & Data Science',         reviewStatus: 'pending'  },
     ],
     approvers: [{ id: '2811854', name: 'Anita Wijayanti', role: 'SVP Sumber Daya Manusia', approveStatus: 'pending' }],
   },
@@ -267,7 +267,7 @@ const SURAT = [
     sifat: 'terbatas', kecepatan: 'biasa', status: 'disetujui',
     tanggal: '03 Mei 2026', pembuat: 'Cahyo Nugroho', av: 6, init: 'CN',
     reviewers: [
-      { id: CURRENT_USER_ID, name: 'Sri Dewanti',      role: 'VP Human Capital',        reviewStatus: 'approved' },
+      { id: CURRENT_USER_ID, name: 'Yetty Endarwati',      role: 'SVP Digitalisasi & Data Science',        reviewStatus: 'approved' },
       { id: '2611582',        name: 'Linda Kurniawati', role: 'VP Legal & Compliance',   reviewStatus: 'approved' },
     ],
     approvers: [{ id: '2511437', name: 'Dr. Indra Permana', role: 'Direktur Operasi & Produksi', approveStatus: 'approved' }],

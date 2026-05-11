@@ -2397,7 +2397,7 @@ const ApproverPage = ({ suratList, onAction, currentUserId }) => {
 // POV SWITCHER (demo floating button)
 // ─────────────────────────────────────────────
 const POV_OPTIONS = [
-  { id: 'SD-00001',  name: 'Sri Dewanti',       init: 'SD', role: 'Reviewer 1 · VP Human Capital',         color: '#00753E', bg: '#EBF6F0', type: 'reviewer' },
+  { id: '1120084',   name: 'Yetty Endarwati',   init: 'YE', role: 'Reviewer 1 · SVP Digitalisasi',         color: '#00753E', bg: '#EBF6F0', type: 'reviewer' },
   { id: '2611582',   name: 'Linda Kurniawati',  init: 'LK', role: 'Reviewer 2 · VP Legal & Compliance',    color: '#0E7AC0', bg: '#E8F2FA', type: 'reviewer' },
   { id: '2511437',   name: 'Dr. Indra Permana', init: 'IP', role: 'Approver · Dir. Operasi & Produksi',    color: '#B76E00', bg: '#FFF7E6', type: 'approver' },
   { id: 'PI-15912',  name: 'Cahyo Nugroho',     init: 'CN', role: 'Drafter · Senior Auditor',              color: '#7635DC', bg: '#F3EDFF', type: 'drafter'  },
