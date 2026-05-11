@@ -94,6 +94,10 @@ const NAV = [
       { key: 'buat-surat',     label: 'Manajemen Surat', viewKey: 'manajemen-surat' },
       { key: 'buat-sp',        label: 'Buat SP/ASP', viewKey: 'buat-sp' },
   ]},
+  { key: 'persetujuan', label: 'Persetujuan Surat', children: [
+      { key: 'reviewer',  label: 'Reviewer',  viewKey: 'reviewer'  },
+      { key: 'approver',  label: 'Approver',  viewKey: 'approver'  },
+  ]},
   { key: 'master',     label: 'Master Data', children: [
       { key: 'master-jenis',   label: 'Jenis Surat', viewKey: 'master-jenis' },
       { key: 'master-klasif',  label: 'Klasifikasi', viewKey: 'master-klasif' },
@@ -130,6 +134,8 @@ const STATUS_SURAT_CHIP = {
   'draft':              { lbl: 'Draft',              cls: 'gray'  },
   'menunggu-review':    { lbl: 'Menunggu Review',    cls: 'amber' },
   'menunggu-approval':  { lbl: 'Menunggu Approval',  cls: 'blue'  },
+  'disetujui':          { lbl: 'Disetujui',          cls: 'green' },
+  'ditolak':            { lbl: 'Ditolak',            cls: 'red'   },
 };
 
 const SURAT = [

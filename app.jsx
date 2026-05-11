@@ -56,6 +56,24 @@ function App() {
     });
   };
 
+  const handleReviewerAction = (id, action) => {
+    setSuratList((prev) => prev.map((s) => {
+      if (s.id !== id) return s;
+      if (action === 'approve') return { ...s, status: 'menunggu-approval' };
+      if (action === 'reject')  return { ...s, status: 'draft' };
+      return s;
+    }));
+  };
+
+  const handleApproverAction = (id, action) => {
+    setSuratList((prev) => prev.map((s) => {
+      if (s.id !== id) return s;
+      if (action === 'finalize') return { ...s, status: 'disetujui' };
+      if (action === 'return')   return { ...s, status: 'menunggu-review' };
+      return s;
+    }));
+  };
+
   React.useEffect(() => {
     if (activeView === 'detail-surat' && !openedSurat) setActiveView('manajemen-surat');
   }, [activeView, openedSurat]);
@@ -117,6 +135,8 @@ function App() {
         </>
       );
     }
+    if (activeView === 'reviewer')        return <ReviewerPage suratList={suratList} onAction={handleReviewerAction}/>;
+    if (activeView === 'approver')        return <ApproverPage suratList={suratList} onAction={handleApproverAction}/>;
     if (activeView === 'inbox')           return <InboxPage/>;
     if (activeView === 'notif')           return <NotifikasiPage/>;
     if (activeView === 'profil-saya')     return <ProfilSayaPage/>;

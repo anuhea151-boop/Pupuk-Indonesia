@@ -1953,6 +1953,341 @@ const BuatSuratBaru = ({ onBack, onSubmit, readOnly, surat, onWithdraw }) => {
 };
 
 // ─────────────────────────────────────────────
+// REVIEWER & APPROVER PAGES
+// ─────────────────────────────────────────────
+
+const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onAction, onOpenLetter }) => {
+  const [search, setSearch]   = React.useState('');
+  const [sifatF, setSifatF]   = React.useState('all');
+  const [kecF, setKecF]       = React.useState('all');
+  const [confirm, setConfirm] = React.useState(null); // { id, action: 'approve'|'reject'|'return' }
+  const [flash, setFlash]     = React.useState(null);
+  const [detailOpen, setDetailOpen] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!flash) return;
+    const t = setTimeout(() => setFlash(null), 5000);
+    return () => clearTimeout(t);
+  }, [flash]);
+
+  let filtered = suratList;
+  if (sifatF !== 'all')  filtered = filtered.filter(s => s.sifat === sifatF);
+  if (kecF   !== 'all')  filtered = filtered.filter(s => s.kecepatan === kecF);
+  if (search) filtered = filtered.filter(s =>
+    s.judul.toLowerCase().includes(search.toLowerCase()) ||
+    s.no.toLowerCase().includes(search.toLowerCase()) ||
+    s.pembuat.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleConfirm = () => {
+    if (!confirm) return;
+    const { id, action } = confirm;
+    onAction(id, action);
+    const surat = suratList.find(s => s.id === id);
+    const judulShort = surat ? `"${surat.judul.slice(0, 50)}${surat.judul.length > 50 ? '…' : ''}"` : '';
+    const messages = {
+      approve:  { tone: 'success', title: 'Review disetujui',  msg: `Surat ${judulShort} diteruskan ke tahap Approval.`    },
+      reject:   { tone: 'error',   title: 'Review ditolak',    msg: `Surat ${judulShort} dikembalikan ke status Draft.`     },
+      'return': { tone: 'error',   title: 'Approval ditolak',  msg: `Surat ${judulShort} dikembalikan ke Menunggu Review.`  },
+      finalize: { tone: 'success', title: 'Surat disetujui',   msg: `Surat ${judulShort} telah disetujui dan selesai.`      },
+    };
+    setFlash(messages[action] || { tone: 'info', title: 'Aksi berhasil', msg: '' });
+    setConfirm(null);
+  };
+
+  const ActionButtons = ({ s }) => {
+    if (mode === 'reviewer') return (
+      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+        <button className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }}
+          onClick={e => { e.stopPropagation(); setDetailOpen(s); }}>
+          <Icon name="eye" size={13}/> Lihat
+        </button>
+        <button className="btn btn-danger" style={{ fontSize: 12, padding: '6px 12px' }}
+          onClick={e => { e.stopPropagation(); setConfirm({ id: s.id, action: 'reject' }); }}>
+          <Icon name="x" size={13} strokeWidth={2.4}/> Tolak
+        </button>
+        <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 12px', background: '#118D57', borderColor: '#118D57' }}
+          onClick={e => { e.stopPropagation(); setConfirm({ id: s.id, action: 'approve' }); }}>
+          <Icon name="check" size={13} strokeWidth={2.4}/> Setujui Review
+        </button>
+      </div>
+    );
+    if (mode === 'approver') return (
+      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+        <button className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }}
+          onClick={e => { e.stopPropagation(); setDetailOpen(s); }}>
+          <Icon name="eye" size={13}/> Lihat
+        </button>
+        <button className="btn btn-danger" style={{ fontSize: 12, padding: '6px 12px' }}
+          onClick={e => { e.stopPropagation(); setConfirm({ id: s.id, action: 'return' }); }}>
+          <Icon name="x" size={13} strokeWidth={2.4}/> Tolak
+        </button>
+        <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 12px' }}
+          onClick={e => { e.stopPropagation(); setConfirm({ id: s.id, action: 'finalize' }); }}>
+          <Icon name="check" size={13} strokeWidth={2.4}/> Setujui
+        </button>
+      </div>
+    );
+    return null;
+  };
+
+  const confirmMeta = confirm && {
+    approve:  { label: 'Setujui Review',  msg: 'Surat akan diteruskan ke tahap Approval.',            btnCls: 'btn-primary', btnStyle: { background: '#118D57', borderColor: '#118D57' } },
+    reject:   { label: 'Tolak Review',    msg: 'Surat akan dikembalikan ke status Draft kepada pembuat.', btnCls: 'btn-danger', btnStyle: {} },
+    'return': { label: 'Tolak Approval',  msg: 'Surat akan dikembalikan ke Reviewer untuk direvisi.',  btnCls: 'btn-danger', btnStyle: {} },
+    finalize: { label: 'Setujui Surat',   msg: 'Surat akan resmi disetujui dan proses selesai.',       btnCls: 'btn-primary', btnStyle: {} },
+  }[confirm?.action];
+
+  return (
+    <div>
+      {flash && (
+        <div className={`flash flash-${flash.tone}`} style={{ marginBottom: 0 }}>
+          <span className="flash-ic"><Icon name={flash.tone === 'success' ? 'check' : 'info'} size={16} strokeWidth={2.4}/></span>
+          <div className="flash-body">
+            <div className="flash-title">{flash.title}</div>
+            <div className="flash-msg">{flash.msg}</div>
+          </div>
+          <button className="flash-x" onClick={() => setFlash(null)}><Icon name="x" size={14}/></button>
+        </div>
+      )}
+
+      <div className="card" style={{ overflow: 'hidden' }}>
+        <div className="card-head">
+          <div>
+            <h3 className="card-title">{title}</h3>
+            <p className="card-subtitle">{subtitle}</p>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="filterbar">
+          <div className="filter-input">
+            <Icon name="search" size={16}/>
+            <input placeholder="Cari judul, nomor surat, atau pembuat…" value={search} onChange={e => setSearch(e.target.value)}/>
+          </div>
+          <select className="filter-select" value={sifatF} onChange={e => setSifatF(e.target.value)}
+            style={{ appearance: 'none', paddingRight: 28, backgroundImage: 'url(\'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%23637381" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>\')', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}>
+            <option value="all">Sifat: Semua</option>
+            <option value="biasa">Biasa</option>
+            <option value="terbatas">Terbatas</option>
+            <option value="rahasia">Rahasia</option>
+            <option value="sangat-rahasia">Sangat Rahasia</option>
+          </select>
+          <select className="filter-select" value={kecF} onChange={e => setKecF(e.target.value)}
+            style={{ appearance: 'none', paddingRight: 28, backgroundImage: 'url(\'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%23637381" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>\')', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}>
+            <option value="all">Kecepatan: Semua</option>
+            <option value="biasa">Biasa</option>
+            <option value="segera">Segera</option>
+            <option value="sangat-segera">Sangat Segera</option>
+          </select>
+        </div>
+
+        {/* Table */}
+        <div style={{ overflowX: 'auto' }}>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th style={{ width: 36 }}><input type="checkbox"/></th>
+                <th>Judul Surat</th>
+                <th>Sifat</th>
+                <th>Kecepatan</th>
+                <th>Pembuat</th>
+                <th>Tanggal</th>
+                <th style={{ textAlign: 'right' }}>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '60px 24px' }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
+                  <div style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{emptyMsg}</div>
+                </td></tr>
+              ) : filtered.map(s => {
+                const sif  = SIFAT_CHIP[s.sifat]      || { lbl: s.sifat,      cls: 'gray' };
+                const kec  = KECEPATAN_CHIP[s.kecepatan] || { lbl: s.kecepatan, cls: 'gray' };
+                return (
+                  <tr key={s.id} style={{ cursor: 'pointer' }} onClick={() => setDetailOpen(s)}>
+                    <td onClick={e => e.stopPropagation()}><input type="checkbox"/></td>
+                    <td style={{ maxWidth: 380 }}>
+                      <div style={{ fontWeight: 600, lineHeight: 1.3 }}>{s.judul}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>{s.no}</div>
+                    </td>
+                    <td><span className={`chip ${sif.cls}`}>{sif.lbl}</span></td>
+                    <td><span className={`chip ${kec.cls}`}>{kec.lbl}</span></td>
+                    <td>
+                      <div className="flex" style={{ gap: 8 }}>
+                        <div className={`avatar av-${s.av}`} style={{ width: 28, height: 28, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 700, color: 'white', flexShrink: 0 }}>{s.init}</div>
+                        <span style={{ fontSize: 13 }}>{s.pembuat}</span>
+                      </div>
+                    </td>
+                    <td className="muted tnum">{s.tanggal}</td>
+                    <td onClick={e => e.stopPropagation()}><ActionButtons s={s}/></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="pagi">
+          <span>Menampilkan <b className="tnum">{filtered.length}</b> dari {suratList.length} surat</span>
+        </div>
+      </div>
+
+      {/* Confirm modal */}
+      {confirm && confirmMeta && (
+        <div onClick={() => setConfirm(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(28,37,46,0.5)', backdropFilter: 'blur(4px)', display: 'grid', placeItems: 'center', zIndex: 200, padding: 24 }}>
+          <div onClick={e => e.stopPropagation()} className="card" style={{ width: 460, maxWidth: '100%' }}>
+            <div className="card-head" style={{ borderBottom: '1px dashed var(--border)' }}>
+              <h3 className="card-title">{confirmMeta.label}</h3>
+              <button className="icon-btn" onClick={() => setConfirm(null)}><Icon name="x" size={18}/></button>
+            </div>
+            <div style={{ padding: '20px 24px' }}>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 20 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: confirm.action === 'approve' || confirm.action === 'finalize' ? 'var(--success-bg)' : 'var(--error-bg)', display: 'grid', placeItems: 'center', flexShrink: 0, color: confirm.action === 'approve' || confirm.action === 'finalize' ? '#118D57' : '#B71D18' }}>
+                  <Icon name={confirm.action === 'approve' || confirm.action === 'finalize' ? 'check' : 'info'} size={20} strokeWidth={2}/>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600, marginBottom: 4 }}>Konfirmasi Tindakan</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{confirmMeta.msg}</div>
+                  <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--hover)', borderRadius: 8, fontSize: 12, fontWeight: 600 }}>
+                    {suratList.find(s => s.id === confirm.id)?.judul}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button className="btn btn-secondary" onClick={() => setConfirm(null)}>Batal</button>
+                <button className={`btn ${confirmMeta.btnCls}`} style={confirmMeta.btnStyle} onClick={handleConfirm}>
+                  <Icon name="check" size={14} strokeWidth={2.4}/> {confirmMeta.label}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail modal (reuse existing) */}
+      {detailOpen && (
+        <SuratDetailModal
+          surat={detailOpen}
+          onClose={() => setDetailOpen(null)}
+          onWithdraw={null}
+          onOpenLetter={null}
+        />
+      )}
+    </div>
+  );
+};
+
+const ReviewerPage = ({ suratList, onAction }) => {
+  const toReview = suratList.filter(s => s.status === 'menunggu-review');
+  const counts = {
+    total: toReview.length,
+    sangatSegera: toReview.filter(s => s.kecepatan === 'sangat-segera').length,
+    segera: toReview.filter(s => s.kecepatan === 'segera').length,
+  };
+
+  return (
+    <div>
+      <div className="page-title">
+        <div>
+          <h1>Reviewer</h1>
+          <div className="crumbs">
+            <span>Pupuk Indonesia</span><span className="sep"></span>
+            <span>Persetujuan Surat</span><span className="sep"></span>
+            <span className="now">Reviewer</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Info banner */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 0 }}>
+        {[
+          { label: 'Menunggu Review', value: counts.total,        icon: 'eye',    color: 'amber', sub: 'surat perlu ditinjau' },
+          { label: 'Sangat Segera',   value: counts.sangatSegera, icon: 'info',   color: 'red',   sub: 'prioritas tinggi'    },
+          { label: 'Segera',          value: counts.segera,       icon: 'cal',    color: 'blue',  sub: 'prioritas normal'    },
+        ].map((s, i) => (
+          <div className="card kpi" key={i}>
+            <div className="kpi-head"><div className={`kpi-icon ${s.color}`}><Icon name={s.icon} size={24} strokeWidth={1.6}/></div></div>
+            <div className="kpi-label">{s.label}</div>
+            <div className="kpi-value tnum">{s.value}</div>
+            <div className="kpi-foot">{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ padding: '12px 16px', background: 'var(--warning-bg)', borderRadius: 12, display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: '#7A4F00' }}>
+        <Icon name="info" size={16} strokeWidth={2} color="#B76E00" style={{ flexShrink: 0, marginTop: 1 }}/>
+        <span>Sebagai <b>Reviewer</b>, tugas Anda adalah memeriksa kelengkapan dan kesesuaian isi surat sebelum diteruskan ke Approver. Klik <b>Setujui Review</b> untuk meneruskan, atau <b>Tolak</b> untuk mengembalikan ke pembuat.</span>
+      </div>
+
+      <SuratWorkflowTable
+        title="Surat Menunggu Review"
+        subtitle={`${counts.total} surat perlu ditinjau oleh Anda`}
+        emptyMsg="Tidak ada surat yang menunggu review saat ini"
+        suratList={toReview}
+        mode="reviewer"
+        onAction={onAction}
+      />
+    </div>
+  );
+};
+
+const ApproverPage = ({ suratList, onAction }) => {
+  const toApprove = suratList.filter(s => s.status === 'menunggu-approval');
+  const counts = {
+    total: toApprove.length,
+    sangatSegera: toApprove.filter(s => s.kecepatan === 'sangat-segera').length,
+    rahasia: toApprove.filter(s => s.sifat === 'rahasia' || s.sifat === 'sangat-rahasia').length,
+  };
+
+  return (
+    <div>
+      <div className="page-title">
+        <div>
+          <h1>Approver</h1>
+          <div className="crumbs">
+            <span>Pupuk Indonesia</span><span className="sep"></span>
+            <span>Persetujuan Surat</span><span className="sep"></span>
+            <span className="now">Approver</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Info banner */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 0 }}>
+        {[
+          { label: 'Menunggu Approval', value: counts.total,        icon: 'check',  color: 'blue',  sub: 'surat perlu disetujui' },
+          { label: 'Sangat Segera',     value: counts.sangatSegera, icon: 'info',   color: 'red',   sub: 'prioritas tinggi'      },
+          { label: 'Rahasia / SR',      value: counts.rahasia,      icon: 'briefc', color: 'amber', sub: 'perlu perhatian khusus'},
+        ].map((s, i) => (
+          <div className="card kpi" key={i}>
+            <div className="kpi-head"><div className={`kpi-icon ${s.color}`}><Icon name={s.icon} size={24} strokeWidth={1.6}/></div></div>
+            <div className="kpi-label">{s.label}</div>
+            <div className="kpi-value tnum">{s.value}</div>
+            <div className="kpi-foot">{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ padding: '12px 16px', background: 'var(--info-bg)', borderRadius: 12, display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: '#004B6B' }}>
+        <Icon name="info" size={16} strokeWidth={2} color="#006C9C" style={{ flexShrink: 0, marginTop: 1 }}/>
+        <span>Sebagai <b>Approver</b>, tugas Anda adalah memberikan persetujuan akhir atas surat yang telah melalui tahap review. Klik <b>Setujui</b> untuk mengesahkan, atau <b>Tolak</b> untuk mengembalikan ke Reviewer.</span>
+      </div>
+
+      <SuratWorkflowTable
+        title="Surat Menunggu Approval"
+        subtitle={`${counts.total} surat perlu disetujui oleh Anda`}
+        emptyMsg="Tidak ada surat yang menunggu approval saat ini"
+        suratList={toApprove}
+        mode="approver"
+        onAction={onAction}
+      />
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
 // INBOX PAGE
 // ─────────────────────────────────────────────
 const INBOX_TYPE_META = {
