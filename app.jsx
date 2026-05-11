@@ -69,11 +69,17 @@ function App() {
         const allApproved = updatedReviewers.every(r => r.reviewStatus === 'approved');
         return { ...s, reviewers: updatedReviewers, status: allApproved ? 'menunggu-approval' : 'menunggu-review' };
       }
-      if (action === 'reject') {
+      if (action === 'return-drafter') {
         const updatedReviewers = (s.reviewers || []).map(r =>
-          r.id === povUserId ? { ...r, reviewStatus: 'rejected' } : r
+          r.id === povUserId ? { ...r, reviewStatus: 'returned' } : r
         );
         return { ...s, reviewers: updatedReviewers, status: 'draft' };
+      }
+      if (action === 'cancel') {
+        const updatedReviewers = (s.reviewers || []).map(r =>
+          r.id === povUserId ? { ...r, reviewStatus: 'cancelled' } : r
+        );
+        return { ...s, reviewers: updatedReviewers, status: 'dibatalkan' };
       }
       return s;
     }));

@@ -1969,10 +1969,11 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
     }
 
     const messages = {
-      approve:  { tone: 'success', title: 'Review disetujui',  msg: approveMsg },
-      reject:   { tone: 'error',   title: 'Review ditolak',    msg: `Surat ${judulShort} dikembalikan ke status Draft.`     },
-      'return': { tone: 'error',   title: 'Approval ditolak',  msg: `Surat ${judulShort} dikembalikan ke Menunggu Review.`  },
-      finalize: { tone: 'success', title: 'Surat disetujui',   msg: `Surat ${judulShort} telah disetujui dan selesai.`      },
+      approve:          { tone: 'success', title: 'Review disetujui',        msg: approveMsg },
+      'return-drafter': { tone: 'info',    title: 'Dikembalikan ke Drafter', msg: `Surat ${judulShort} dikembalikan ke pembuat untuk diperbaiki.` },
+      cancel:           { tone: 'error',   title: 'Surat dibatalkan',        msg: `Surat ${judulShort} telah dibatalkan dan tidak dapat diproses lebih lanjut.` },
+      'return':         { tone: 'error',   title: 'Approval ditolak',        msg: `Surat ${judulShort} dikembalikan ke Menunggu Review.` },
+      finalize:         { tone: 'success', title: 'Surat disetujui',         msg: `Surat ${judulShort} telah disetujui dan selesai.` },
     };
     onAction(id, action);
     setFlash(messages[action] || { tone: 'info', title: 'Aksi berhasil', msg: '' });
@@ -1984,15 +1985,19 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
         <button className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }}
           onClick={e => { e.stopPropagation(); setDetailOpen(s); }}>
-          <Icon name="eye" size={13}/> Lihat
+          <Icon name="eye" size={13}/> Detail
         </button>
         <button className="btn btn-danger" style={{ fontSize: 12, padding: '6px 12px' }}
-          onClick={e => { e.stopPropagation(); setConfirm({ id: s.id, action: 'reject' }); }}>
-          <Icon name="x" size={13} strokeWidth={2.4}/> Tolak
+          onClick={e => { e.stopPropagation(); setConfirm({ id: s.id, action: 'cancel' }); }}>
+          <Icon name="x" size={13} strokeWidth={2.4}/> Batalkan
+        </button>
+        <button className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }}
+          onClick={e => { e.stopPropagation(); setConfirm({ id: s.id, action: 'return-drafter' }); }}>
+          <Icon name="chevd" size={13}/> Kembalikan
         </button>
         <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 12px', background: '#118D57', borderColor: '#118D57' }}
           onClick={e => { e.stopPropagation(); setConfirm({ id: s.id, action: 'approve' }); }}>
-          <Icon name="check" size={13} strokeWidth={2.4}/> Setujui Review
+          <Icon name="check" size={13} strokeWidth={2.4}/> Setujui
         </button>
       </div>
     );
@@ -2016,10 +2021,11 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
   };
 
   const confirmMeta = confirm && {
-    approve:  { label: 'Setujui Review',  msg: 'Surat akan diteruskan ke tahap Approval.',            btnCls: 'btn-primary', btnStyle: { background: '#118D57', borderColor: '#118D57' } },
-    reject:   { label: 'Tolak Review',    msg: 'Surat akan dikembalikan ke status Draft kepada pembuat.', btnCls: 'btn-danger', btnStyle: {} },
-    'return': { label: 'Tolak Approval',  msg: 'Surat akan dikembalikan ke Reviewer untuk direvisi.',  btnCls: 'btn-danger', btnStyle: {} },
-    finalize: { label: 'Setujui Surat',   msg: 'Surat akan resmi disetujui dan proses selesai.',       btnCls: 'btn-primary', btnStyle: {} },
+    approve:          { label: 'Setujui',             msg: 'Surat akan diteruskan ke reviewer berikutnya atau ke Approver jika semua reviewer sudah menyetujui.', btnCls: 'btn-primary', btnStyle: { background: '#118D57', borderColor: '#118D57' } },
+    'return-drafter': { label: 'Kembalikan ke Drafter', msg: 'Surat akan dikembalikan ke pembuat (drafter) untuk diperbaiki. Status berubah kembali ke Draft.',    btnCls: 'btn-secondary', btnStyle: {} },
+    cancel:           { label: 'Batalkan Surat',      msg: 'Surat akan dibatalkan dan tidak dapat diproses lebih lanjut. Tindakan ini tidak dapat diurungkan.',    btnCls: 'btn-danger', btnStyle: {} },
+    'return':         { label: 'Tolak Approval',      msg: 'Surat akan dikembalikan ke Reviewer untuk direvisi.',                                                  btnCls: 'btn-danger', btnStyle: {} },
+    finalize:         { label: 'Setujui Surat',       msg: 'Surat akan resmi disetujui dan proses selesai.',                                                       btnCls: 'btn-primary', btnStyle: {} },
   }[confirm?.action];
 
   return (
@@ -2122,10 +2128,10 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
                               {reviewers.map((r, idx) => (
                                 <div key={idx} title={`${r.name} — ${r.reviewStatus === 'approved' ? 'Disetujui' : r.reviewStatus === 'rejected' ? 'Ditolak' : 'Menunggu'}`}
                                   style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid',
-                                    borderColor: r.reviewStatus === 'approved' ? '#118D57' : r.reviewStatus === 'rejected' ? '#B71D18' : 'var(--border)',
-                                    background: r.reviewStatus === 'approved' ? '#D3F5E3' : r.reviewStatus === 'rejected' ? '#FFDAD5' : 'var(--hover)',
+                                    borderColor: r.reviewStatus === 'approved' ? '#118D57' : (r.reviewStatus === 'rejected' || r.reviewStatus === 'cancelled') ? '#B71D18' : r.reviewStatus === 'returned' ? '#0E7AC0' : 'var(--border)',
+                                    background: r.reviewStatus === 'approved' ? '#D3F5E3' : (r.reviewStatus === 'rejected' || r.reviewStatus === 'cancelled') ? '#FFDAD5' : r.reviewStatus === 'returned' ? '#E8F2FA' : 'var(--hover)',
                                     display: 'grid', placeItems: 'center', fontSize: 9, fontWeight: 700,
-                                    color: r.reviewStatus === 'approved' ? '#118D57' : r.reviewStatus === 'rejected' ? '#B71D18' : 'var(--text-secondary)',
+                                    color: r.reviewStatus === 'approved' ? '#118D57' : (r.reviewStatus === 'rejected' || r.reviewStatus === 'cancelled') ? '#B71D18' : r.reviewStatus === 'returned' ? '#0E7AC0' : 'var(--text-secondary)',
                                     flexShrink: 0,
                                   }}>
                                   {r.id === ME ? '★' : (idx + 1)}
@@ -2158,6 +2164,8 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
         // Simulate post-action reviewer statuses for display
         const previewReviewers = confirm.action === 'approve'
           ? reviewers.map(r => r.id === ME ? { ...r, reviewStatus: 'approved' } : r)
+          : confirm.action === 'return-drafter'
+          ? reviewers.map(r => r.id === ME ? { ...r, reviewStatus: 'returned' } : r)
           : reviewers;
         const allWouldApprove = previewReviewers.every(r => r.reviewStatus === 'approved');
         return (
@@ -2169,8 +2177,8 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
               </div>
               <div style={{ padding: '20px 24px' }}>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 20 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: confirm.action === 'approve' || confirm.action === 'finalize' ? 'var(--success-bg)' : 'var(--error-bg)', display: 'grid', placeItems: 'center', flexShrink: 0, color: confirm.action === 'approve' || confirm.action === 'finalize' ? '#118D57' : '#B71D18' }}>
-                    <Icon name={confirm.action === 'approve' || confirm.action === 'finalize' ? 'check' : 'info'} size={20} strokeWidth={2}/>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: (confirm.action === 'approve' || confirm.action === 'finalize') ? 'var(--success-bg)' : confirm.action === 'return-drafter' ? 'var(--info-bg)' : 'var(--error-bg)', display: 'grid', placeItems: 'center', flexShrink: 0, color: (confirm.action === 'approve' || confirm.action === 'finalize') ? '#118D57' : confirm.action === 'return-drafter' ? '#006C9C' : '#B71D18' }}>
+                    <Icon name={confirm.action === 'approve' || confirm.action === 'finalize' ? 'check' : confirm.action === 'return-drafter' ? 'chevd' : 'info'} size={20} strokeWidth={2}/>
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, marginBottom: 4 }}>Konfirmasi Tindakan</div>
@@ -2193,13 +2201,13 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
                       {previewReviewers.map((r, idx) => {
                         const isMe = r.id === ME;
                         const st = r.reviewStatus;
-                        const dotColor = st === 'approved' ? '#118D57' : st === 'rejected' ? '#B71D18' : '#B76E00';
-                        const dotBg   = st === 'approved' ? '#D3F5E3' : st === 'rejected' ? '#FFDAD5' : '#FFF0CC';
+                        const dotColor = st === 'approved' ? '#118D57' : (st === 'rejected' || st === 'cancelled') ? '#B71D18' : st === 'returned' ? '#0E7AC0' : '#B76E00';
+                        const dotBg   = st === 'approved' ? '#D3F5E3' : (st === 'rejected' || st === 'cancelled') ? '#FFDAD5' : st === 'returned' ? '#E8F2FA' : '#FFF0CC';
                         return (
                           <React.Fragment key={r.id}>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 80 }}>
                               <div style={{ width: 34, height: 34, borderRadius: '50%', border: `2px solid ${dotColor}`, background: dotBg, display: 'grid', placeItems: 'center', fontSize: 13, color: dotColor }}>
-                                {st === 'approved' ? <Icon name="check" size={14} strokeWidth={2.5}/> : st === 'rejected' ? <Icon name="x" size={14} strokeWidth={2.5}/> : <Icon name="eye" size={14} strokeWidth={2}/>}
+                                {st === 'approved' ? <Icon name="check" size={14} strokeWidth={2.5}/> : (st === 'rejected' || st === 'cancelled') ? <Icon name="x" size={14} strokeWidth={2.5}/> : st === 'returned' ? <Icon name="chevd" size={14} strokeWidth={2.5}/> : <Icon name="eye" size={14} strokeWidth={2}/>}
                               </div>
                               <div style={{ fontSize: 11, fontWeight: isMe ? 700 : 500, textAlign: 'center', color: isMe ? 'var(--text)' : 'var(--text-secondary)', lineHeight: 1.3 }}>
                                 {isMe ? `${r.name} (Anda)` : r.name}

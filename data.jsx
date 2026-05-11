@@ -136,6 +136,7 @@ const STATUS_SURAT_CHIP = {
   'menunggu-approval':  { lbl: 'Menunggu Approval',  cls: 'blue'  },
   'disetujui':          { lbl: 'Disetujui',          cls: 'green' },
   'ditolak':            { lbl: 'Ditolak',            cls: 'red'   },
+  'dibatalkan':         { lbl: 'Dibatalkan',         cls: 'red'   },
 };
 
 // ID pengguna yang sedang login (Sri Dewanti — VP Human Capital)
