@@ -138,16 +138,101 @@ const STATUS_SURAT_CHIP = {
   'ditolak':            { lbl: 'Ditolak',            cls: 'red'   },
 };
 
+// ID pengguna yang sedang login (Sri Dewanti — VP Human Capital)
+const CURRENT_USER_ID = 'SD-00001';
+
 const SURAT = [
-  { id: 'SR-2026-0512', no: '001/PI/HR/V/2026', judul: 'Permohonan Penambahan Kuota Subsidi Pupuk Q3 2026',         sifat: 'biasa',          kecepatan: 'segera',        status: 'menunggu-approval',  tanggal: '10 Mei 2026', pembuat: 'Ahmad Fauzi', av: 4, init: 'AF' },
-  { id: 'SR-2026-0511', no: '002/PI/DIR/V/2026', judul: 'Surat Edaran Implementasi SOP K3 Plant Bontang',           sifat: 'biasa',          kecepatan: 'biasa',         status: 'draft',              tanggal: '09 Mei 2026', pembuat: 'Andi Pratama', av: 2, init: 'AP' },
-  { id: 'SR-2026-0510', no: '003/PI/AUD/V/2026', judul: 'Laporan Hasil Audit Internal Q1 2026 — Rahasia',           sifat: 'sangat-rahasia', kecepatan: 'sangat-segera', status: 'menunggu-review',    tanggal: '09 Mei 2026', pembuat: 'Cahyo Nugroho', av: 6, init: 'CN' },
-  { id: 'SR-2026-0509', no: '004/PI/PROC/V/2026',judul: 'Surat Pesanan Bahan Baku Amoniak — Petrokimia Gresik',     sifat: 'rahasia',        kecepatan: 'segera',        status: 'menunggu-approval',  tanggal: '08 Mei 2026', pembuat: 'Putri Maharani', av: 4, init: 'PM' },
-  { id: 'SR-2026-0508', no: '005/PI/HR/V/2026',  judul: 'Pengumuman Rekrutmen Manajemen Trainee Batch 12',          sifat: 'biasa',          kecepatan: 'biasa',         status: 'menunggu-approval',  tanggal: '08 Mei 2026', pembuat: 'Dewi Lestari', av: 5, init: 'DL' },
-  { id: 'SR-2026-0507', no: '006/PI/IT/V/2026',  judul: 'Permintaan Akses Data Center Plant Lhokseumawe',           sifat: 'terbatas',       kecepatan: 'segera',        status: 'menunggu-review',    tanggal: '07 Mei 2026', pembuat: 'Lestari Wibowo', av: 5, init: 'LW' },
-  { id: 'SR-2026-0506', no: '007/PI/MKT/V/2026', judul: 'Undangan Town Hall Q2 — Direksi & Senior Management',      sifat: 'biasa',          kecepatan: 'biasa',         status: 'menunggu-approval',  tanggal: '07 Mei 2026', pembuat: 'Hendra Setiawan', av: 6, init: 'HS' },
-  { id: 'SR-2026-0505', no: '008/PI/FIN/V/2026', judul: 'Memo Rekonsiliasi Kas Bank Bulan April 2026',              sifat: 'terbatas',       kecepatan: 'biasa',         status: 'draft',              tanggal: '06 Mei 2026', pembuat: 'Rini Anggraini', av: 3, init: 'RA' },
-  { id: 'SR-2026-0504', no: '009/PI/RND/V/2026', judul: 'Proposal Riset Formula NPK Premium Generasi 3',            sifat: 'rahasia',        kecepatan: 'segera',        status: 'menunggu-review',    tanggal: '06 Mei 2026', pembuat: 'Maya Putri', av: 1, init: 'MP' },
+  {
+    id: 'SR-2026-0512', no: '001/PI/HR/V/2026',
+    judul: 'Permohonan Penambahan Kuota Subsidi Pupuk Q3 2026',
+    sifat: 'biasa', kecepatan: 'segera', status: 'menunggu-approval',
+    tanggal: '10 Mei 2026', pembuat: 'Ahmad Fauzi', av: 4, init: 'AF',
+    reviewers: [
+      { id: CURRENT_USER_ID, name: 'Sri Dewanti',      role: 'VP Human Capital',          reviewStatus: 'approved' },
+      { id: '1120084',        name: 'Yetty Endarwati',  role: 'SVP Digitalisasi & Data Science', reviewStatus: 'approved' },
+    ],
+    approvers: [{ id: '2511437', name: 'Dr. Indra Permana', role: 'Direktur Operasi & Produksi', approveStatus: 'pending' }],
+  },
+  {
+    id: 'SR-2026-0511', no: '002/PI/DIR/V/2026',
+    judul: 'Surat Edaran Implementasi SOP K3 Plant Bontang',
+    sifat: 'biasa', kecepatan: 'biasa', status: 'draft',
+    tanggal: '09 Mei 2026', pembuat: 'Andi Pratama', av: 2, init: 'AP',
+    reviewers: [], approvers: [],
+  },
+  {
+    id: 'SR-2026-0510', no: '003/PI/AUD/V/2026',
+    judul: 'Laporan Hasil Audit Internal Q1 2026 — Rahasia',
+    sifat: 'sangat-rahasia', kecepatan: 'sangat-segera', status: 'menunggu-review',
+    tanggal: '09 Mei 2026', pembuat: 'Cahyo Nugroho', av: 6, init: 'CN',
+    reviewers: [
+      { id: CURRENT_USER_ID, name: 'Sri Dewanti',      role: 'VP Human Capital',        reviewStatus: 'pending'  },
+      { id: '2611582',        name: 'Linda Kurniawati', role: 'VP Legal & Compliance',   reviewStatus: 'pending'  },
+    ],
+    approvers: [{ id: '2511437', name: 'Dr. Indra Permana', role: 'Direktur Operasi & Produksi', approveStatus: 'pending' }],
+  },
+  {
+    id: 'SR-2026-0509', no: '004/PI/PROC/V/2026',
+    judul: 'Surat Pesanan Bahan Baku Amoniak — Petrokimia Gresik',
+    sifat: 'rahasia', kecepatan: 'segera', status: 'menunggu-approval',
+    tanggal: '08 Mei 2026', pembuat: 'Putri Maharani', av: 4, init: 'PM',
+    reviewers: [
+      { id: CURRENT_USER_ID, name: 'Sri Dewanti',      role: 'VP Human Capital',              reviewStatus: 'approved' },
+      { id: '1210019',        name: 'Muhammad Ridha Fahlawy', role: 'VP Digitalisasi',         reviewStatus: 'approved' },
+    ],
+    approvers: [{ id: '2511437', name: 'Dr. Indra Permana', role: 'Direktur Operasi & Produksi', approveStatus: 'pending' }],
+  },
+  {
+    id: 'SR-2026-0508', no: '005/PI/HR/V/2026',
+    judul: 'Pengumuman Rekrutmen Manajemen Trainee Batch 12',
+    sifat: 'biasa', kecepatan: 'biasa', status: 'menunggu-approval',
+    tanggal: '08 Mei 2026', pembuat: 'Dewi Lestari', av: 5, init: 'DL',
+    reviewers: [
+      { id: CURRENT_USER_ID, name: 'Sri Dewanti',     role: 'VP Human Capital',                reviewStatus: 'approved' },
+      { id: '2811854',        name: 'Anita Wijayanti', role: 'SVP Sumber Daya Manusia',         reviewStatus: 'approved' },
+    ],
+    approvers: [{ id: '2511437', name: 'Dr. Indra Permana', role: 'Direktur Operasi & Produksi', approveStatus: 'pending' }],
+  },
+  {
+    id: 'SR-2026-0507', no: '006/PI/IT/V/2026',
+    judul: 'Permintaan Akses Data Center Plant Lhokseumawe',
+    sifat: 'terbatas', kecepatan: 'segera', status: 'menunggu-review',
+    tanggal: '07 Mei 2026', pembuat: 'Lestari Wibowo', av: 5, init: 'LW',
+    reviewers: [
+      { id: CURRENT_USER_ID, name: 'Sri Dewanti',           role: 'VP Human Capital',      reviewStatus: 'approved' },
+      { id: '1410512',        name: 'Ahmad Fauzi',           role: 'Lead Engineer IT',      reviewStatus: 'pending'  },
+    ],
+    approvers: [{ id: '2611582', name: 'Linda Kurniawati', role: 'VP Legal & Compliance', approveStatus: 'pending' }],
+  },
+  {
+    id: 'SR-2026-0506', no: '007/PI/MKT/V/2026',
+    judul: 'Undangan Town Hall Q2 — Direksi & Senior Management',
+    sifat: 'biasa', kecepatan: 'biasa', status: 'menunggu-approval',
+    tanggal: '07 Mei 2026', pembuat: 'Hendra Setiawan', av: 6, init: 'HS',
+    reviewers: [
+      { id: CURRENT_USER_ID, name: 'Sri Dewanti',     role: 'VP Human Capital',   reviewStatus: 'approved' },
+      { id: '2711729',        name: 'Rahmat Hidayat',  role: 'GM Pemasaran',       reviewStatus: 'approved' },
+    ],
+    approvers: [{ id: '2511437', name: 'Dr. Indra Permana', role: 'Direktur Operasi & Produksi', approveStatus: 'pending' }],
+  },
+  {
+    id: 'SR-2026-0505', no: '008/PI/FIN/V/2026',
+    judul: 'Memo Rekonsiliasi Kas Bank Bulan April 2026',
+    sifat: 'terbatas', kecepatan: 'biasa', status: 'draft',
+    tanggal: '06 Mei 2026', pembuat: 'Rini Anggraini', av: 3, init: 'RA',
+    reviewers: [], approvers: [],
+  },
+  {
+    id: 'SR-2026-0504', no: '009/PI/RND/V/2026',
+    judul: 'Proposal Riset Formula NPK Premium Generasi 3',
+    sifat: 'rahasia', kecepatan: 'segera', status: 'menunggu-review',
+    tanggal: '06 Mei 2026', pembuat: 'Maya Putri', av: 1, init: 'MP',
+    reviewers: [
+      { id: '2711729',        name: 'Rahmat Hidayat',  role: 'GM Pemasaran',             reviewStatus: 'approved' },
+      { id: CURRENT_USER_ID, name: 'Sri Dewanti',      role: 'VP Human Capital',         reviewStatus: 'pending'  },
+    ],
+    approvers: [{ id: '2811854', name: 'Anita Wijayanti', role: 'SVP Sumber Daya Manusia', approveStatus: 'pending' }],
+  },
   { id: 'SR-2026-0503', no: '010/PI/QC/V/2026',  judul: 'Berita Acara Pengujian Kualitas Urea Granular Mei 2026',   sifat: 'biasa',          kecepatan: 'biasa',         status: 'menunggu-approval',  tanggal: '05 Mei 2026', pembuat: 'Joko Susanto', av: 3, init: 'JS' },
   { id: 'SR-2026-0502', no: '011/PI/DIR/V/2026', judul: 'Nota Dinas Penyesuaian Tarif Distribusi Pupuk Bersubsidi', sifat: 'sangat-rahasia', kecepatan: 'sangat-segera', status: 'menunggu-approval',  tanggal: '05 Mei 2026', pembuat: 'Bambang Triyanto', av: 2, init: 'BT' },
   { id: 'SR-2026-0501', no: '012/PI/HR/V/2026',  judul: 'Surat Mutasi Karyawan Antar Anak Perusahaan Per Juni',     sifat: 'terbatas',       kecepatan: 'segera',        status: 'draft',              tanggal: '04 Mei 2026', pembuat: 'Siti Nurhaliza', av: 1, init: 'SN' },
@@ -254,6 +339,7 @@ const MASTER_UNIT = [
 ];
 
 Object.assign(window, {
+  CURRENT_USER_ID,
   ANAK_PERUSAHAAN, TOTAL_HEADCOUNT, HC_DISPLAY,
   HEADCOUNT_TREND, HIRE_EXIT,
   DEMOGRAFI_USIA, PENDING_APPROVALS, UPCOMING,

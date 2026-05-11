@@ -59,8 +59,19 @@ function App() {
   const handleReviewerAction = (id, action) => {
     setSuratList((prev) => prev.map((s) => {
       if (s.id !== id) return s;
-      if (action === 'approve') return { ...s, status: 'menunggu-approval' };
-      if (action === 'reject')  return { ...s, status: 'draft' };
+      if (action === 'approve') {
+        const updatedReviewers = (s.reviewers || []).map(r =>
+          r.id === CURRENT_USER_ID ? { ...r, reviewStatus: 'approved' } : r
+        );
+        const allApproved = updatedReviewers.every(r => r.reviewStatus === 'approved');
+        return { ...s, reviewers: updatedReviewers, status: allApproved ? 'menunggu-approval' : 'menunggu-review' };
+      }
+      if (action === 'reject') {
+        const updatedReviewers = (s.reviewers || []).map(r =>
+          r.id === CURRENT_USER_ID ? { ...r, reviewStatus: 'rejected' } : r
+        );
+        return { ...s, reviewers: updatedReviewers, status: 'draft' };
+      }
       return s;
     }));
   };
