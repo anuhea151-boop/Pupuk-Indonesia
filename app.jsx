@@ -117,6 +117,19 @@ function App() {
         </>
       );
     }
+    if (activeView === 'inbox')           return <InboxPage/>;
+    if (activeView === 'notif')           return <NotifikasiPage/>;
+    if (activeView === 'profil-saya')     return <ProfilSayaPage/>;
+    if (activeView === 'profil-jabatan')  return <ProfilSayaPage/>;
+    if (activeView === 'rekap')           return <RekapPage/>;
+    if (activeView === 'pencarian')       return <PencarianPage/>;
+    if (activeView === 'master-jenis')    return <MasterJenisSuratPage/>;
+    if (activeView === 'master-klasif')   return <MasterKlasifikasiPage/>;
+    if (activeView === 'master-unit')     return <MasterUnitPage/>;
+    if (activeView === 'arsip-a-list' || activeView === 'arsip-a-pinjam')   return <ArsipAktifPage subView={activeView}/>;
+    if (activeView === 'arsip-i-list' || activeView === 'arsip-i-musnah')   return <ArsipInaktifPage subView={activeView}/>;
+    if (activeView === 'permission')      return <PermissionDocumentPage/>;
+    if (activeView === 'rekap-arsip')     return <RekapArsipPage/>;
     // default: dashboard view
     return (
       <>

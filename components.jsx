@@ -1950,4 +1950,974 @@ const BuatSuratBaru = ({ onBack, onSubmit, readOnly, surat, onWithdraw }) => {
   );
 };
 
+// ─────────────────────────────────────────────
+// INBOX PAGE
+// ─────────────────────────────────────────────
+const INBOX_TYPE_META = {
+  review:      { lbl: 'Review',     cls: 'blue'  },
+  reply:       { lbl: 'Balasan',    cls: 'gray'  },
+  announcement:{ lbl: 'Pengumuman', cls: 'amber' },
+  request:     { lbl: 'Permintaan', cls: 'amber' },
+  system:      { lbl: 'Sistem',     cls: 'gray'  },
+  invitation:  { lbl: 'Undangan',   cls: 'blue'  },
+  approved:    { lbl: 'Disetujui',  cls: 'green' },
+};
+
+const InboxPage = () => {
+  const [tab, setTab] = React.useState('all');
+  const [search, setSearch] = React.useState('');
+  const [selected, setSelected] = React.useState(null);
+  const [messages, setMessages] = React.useState(INBOX);
+
+  const filtered = messages.filter(m => {
+    if (tab === 'unread' && !m.unread) return false;
+    if (tab === 'read' && m.unread) return false;
+    if (search && !m.subject.toLowerCase().includes(search.toLowerCase()) && !m.from.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  const unreadCount = messages.filter(m => m.unread).length;
+
+  const open = (msg) => {
+    setSelected(msg);
+    setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, unread: false } : m));
+  };
+
+  const tabs = [
+    { key: 'all', lbl: 'Semua', count: messages.length },
+    { key: 'unread', lbl: 'Belum Dibaca', count: unreadCount },
+    { key: 'read', lbl: 'Sudah Dibaca', count: messages.length - unreadCount },
+  ];
+
+  return (
+    <div>
+      <div className="page-title">
+        <div>
+          <h1>Inbox</h1>
+          <div className="crumbs">
+            <span>Pupuk Indonesia</span><span className="sep"></span>
+            <span className="now">Inbox</span>
+          </div>
+        </div>
+        {unreadCount > 0 && (
+          <button className="btn btn-secondary" onClick={() => setMessages(prev => prev.map(m => ({ ...m, unread: false })))}>
+            <Icon name="check" size={14}/> Tandai Semua Dibaca
+          </button>
+        )}
+      </div>
+
+      <div className="card" style={{ overflow: 'hidden' }}>
+        {/* Tab bar */}
+        <div style={{ padding: '0 24px', borderBottom: '1px solid var(--border-soft)', display: 'flex', gap: 32 }}>
+          {tabs.map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)} style={{
+              padding: '14px 0', borderBottom: tab === t.key ? '2px solid var(--text)' : '2px solid transparent',
+              color: tab === t.key ? 'var(--text)' : 'var(--text-secondary)',
+              fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              {t.lbl}
+              <span className={`chip ${tab === t.key ? 'solid' : 'gray'}`} style={{ fontSize: 11 }}>{t.count}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="filterbar">
+          <div className="filter-input">
+            <Icon name="search" size={16}/>
+            <input placeholder="Cari pesan…" value={search} onChange={e => setSearch(e.target.value)}/>
+          </div>
+        </div>
+
+        {/* List */}
+        <div>
+          {filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 24px', color: 'var(--text-secondary)' }}>Tidak ada pesan</div>
+          ) : filtered.map(msg => {
+            const tm = INBOX_TYPE_META[msg.type] || { lbl: msg.type, cls: 'gray' };
+            const isSelected = selected && selected.id === msg.id;
+            return (
+              <div key={msg.id} onClick={() => open(msg)} style={{
+                display: 'flex', alignItems: 'flex-start', gap: 14, padding: '16px 24px',
+                borderBottom: '1px solid var(--border-soft)', cursor: 'pointer',
+                background: isSelected ? 'var(--primary-50)' : msg.unread ? 'var(--hover)' : 'white',
+                transition: 'background 0.15s',
+              }}>
+                <div className={`avatar av-${msg.av || 0}`} style={{ flexShrink: 0, width: 40, height: 40, borderRadius: '50%', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 13, background: msg.av ? undefined : 'var(--primary-100)', color: msg.av ? undefined : 'var(--primary-dark)' }}>
+                  {msg.init}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                    <span style={{ fontWeight: msg.unread ? 700 : 600, fontSize: 14 }}>{msg.from}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{msg.fromRole} · {msg.fromUnit}</span>
+                    {msg.unread && <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0, marginLeft: 'auto' }}/>}
+                  </div>
+                  <div style={{ fontWeight: msg.unread ? 600 : 500, fontSize: 13, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{msg.subject}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{msg.preview}</div>
+                </div>
+                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                  <span className="muted tnum" style={{ fontSize: 11 }}>{msg.date}</span>
+                  <span className={`chip ${tm.cls}`} style={{ fontSize: 10 }}>{tm.lbl}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Detail panel (modal) */}
+      {selected && (
+        <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(28,37,46,0.45)', backdropFilter: 'blur(4px)', display: 'grid', placeItems: 'center', zIndex: 100, padding: 24 }}>
+          <div onClick={e => e.stopPropagation()} className="card" style={{ width: 640, maxWidth: '100%', maxHeight: '85vh', overflow: 'auto' }}>
+            <div className="card-head" style={{ borderBottom: '1px dashed var(--border)' }}>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>PESAN MASUK · {selected.date} {selected.time}</div>
+                <h3 className="card-title" style={{ fontSize: 16 }}>{selected.subject}</h3>
+              </div>
+              <button className="icon-btn" onClick={() => setSelected(null)}><Icon name="x" size={18}/></button>
+            </div>
+            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                <div className="avatar" style={{ width: 44, height: 44, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'var(--primary-100)', color: 'var(--primary-dark)', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{selected.init}</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{selected.from}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{selected.fromRole} · {selected.fromUnit}</div>
+                </div>
+                <span className={`chip ${(INBOX_TYPE_META[selected.type] || {}).cls || 'gray'}`} style={{ marginLeft: 'auto' }}>{(INBOX_TYPE_META[selected.type] || {}).lbl}</span>
+              </div>
+              <div style={{ borderTop: '1px dashed var(--border)', paddingTop: 16, fontSize: 14, lineHeight: 1.7, color: 'var(--text)' }}>
+                <p>Yang terhormat,<br/>Bapak/Ibu Sri Dewanti<br/>VP Human Capital — Pupuk Indonesia</p>
+                <p style={{ marginTop: 12 }}>{selected.preview} Kami harap informasi ini dapat segera ditindaklanjuti sesuai prosedur yang berlaku di lingkungan Pupuk Indonesia Group.</p>
+                <p style={{ marginTop: 12 }}>Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih.</p>
+                <p style={{ marginTop: 16 }}>Hormat kami,<br/><strong>{selected.from}</strong><br/>{selected.fromRole}</p>
+              </div>
+              {selected.ref && (
+                <div style={{ padding: '12px 14px', background: 'var(--primary-50)', borderRadius: 10, fontSize: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <Icon name="info" size={14} color="var(--primary-dark)"/>
+                  <span style={{ color: 'var(--primary-dark)' }}>Merujuk pada surat <b>{selected.ref}</b></span>
+                </div>
+              )}
+              <div style={{ borderTop: '1px dashed var(--border)', paddingTop: 14, display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button className="btn btn-secondary" onClick={() => setSelected(null)}>Tutup</button>
+                <button className="btn btn-primary"><Icon name="download" size={14}/> Balas</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+// NOTIFIKASI PAGE
+// ─────────────────────────────────────────────
+const NOTIF_META = {
+  success: { color: '#118D57', bg: 'var(--success-bg)' },
+  warning: { color: '#B76E00', bg: 'var(--warning-bg)' },
+  info:    { color: '#006C9C', bg: 'var(--info-bg)'    },
+};
+
+const NotifikasiPage = () => {
+  const [notifs, setNotifs] = React.useState(NOTIFIKASI);
+  const unread = notifs.filter(n => n.unread).length;
+
+  const markAll = () => setNotifs(prev => prev.map(n => ({ ...n, unread: false })));
+  const markOne = (id) => setNotifs(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n));
+
+  return (
+    <div>
+      <div className="page-title">
+        <div>
+          <h1>Notifikasi</h1>
+          <div className="crumbs">
+            <span>Pupuk Indonesia</span><span className="sep"></span>
+            <span className="now">Notifikasi</span>
+          </div>
+        </div>
+        {unread > 0 && (
+          <button className="btn btn-secondary" onClick={markAll}>
+            <Icon name="check" size={14}/> Tandai Semua Dibaca
+          </button>
+        )}
+      </div>
+
+      <div className="card" style={{ overflow: 'hidden' }}>
+        <div className="card-head">
+          <div>
+            <h3 className="card-title">Semua Notifikasi</h3>
+            <p className="card-subtitle">{unread} belum dibaca</p>
+          </div>
+        </div>
+        {notifs.map((n, i) => {
+          const m = NOTIF_META[n.type] || NOTIF_META.info;
+          return (
+            <div key={n.id} onClick={() => markOne(n.id)} style={{
+              display: 'flex', gap: 14, padding: '16px 24px',
+              borderBottom: i < notifs.length - 1 ? '1px solid var(--border-soft)' : 'none',
+              background: n.unread ? 'var(--hover)' : 'white', cursor: 'pointer', transition: 'background 0.15s',
+            }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: m.bg, display: 'grid', placeItems: 'center', flexShrink: 0, color: m.color }}>
+                <Icon name={n.icon} size={18} strokeWidth={2}/>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                  <span style={{ fontWeight: n.unread ? 700 : 600, fontSize: 14 }}>{n.title}</span>
+                  {n.unread && <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--primary)' }}/>}
+                  <span className="muted" style={{ marginLeft: 'auto', fontSize: 12 }}>{n.time}</span>
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{n.msg}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+// PROFIL SAYA PAGE
+// ─────────────────────────────────────────────
+const ProfilSayaPage = () => {
+  const emp = EMPLOYEES[2]; // Ahmad Fauzi as logged-in user substitute (IT · HQ)
+  const user = { name: 'Sri Dewanti', id: 'PI-00001', email: 'sri.dewanti@pupuk-indonesia.com', unit: 'Holding HQ', dept: 'Human Capital', jabatan: 'VP Human Capital', lokasi: 'Jakarta', joined: '03 Agu 2009', status: 'active', init: 'SD', phone: '+62 812 3456 7890', gender: 'Perempuan', dob: '14 Februari 1978', pendidikan: 'S2 Manajemen SDM — Universitas Indonesia' };
+  const riwayat = [
+    { tahun: '2020 – Sekarang', jabatan: 'VP Human Capital', unit: 'Holding HQ', tipe: 'Promosi' },
+    { tahun: '2016 – 2020',     jabatan: 'Senior Manager HR Operations', unit: 'Holding HQ', tipe: 'Promosi' },
+    { tahun: '2013 – 2016',     jabatan: 'HR Business Partner', unit: 'Petrokimia Gresik', tipe: 'Rotasi' },
+    { tahun: '2009 – 2013',     jabatan: 'HR Officer', unit: 'Holding HQ', tipe: 'Rekrutmen' },
+  ];
+
+  const Field = ({ label, value }) => (
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 14, fontWeight: 500 }}>{value}</div>
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="page-title">
+        <div>
+          <h1>Profil Saya</h1>
+          <div className="crumbs">
+            <span>Pupuk Indonesia</span><span className="sep"></span>
+            <span>Profil</span><span className="sep"></span>
+            <span className="now">Profil Saya</span>
+          </div>
+        </div>
+        <button className="btn btn-primary"><Icon name="plus" size={14}/> Edit Profil</button>
+      </div>
+
+      {/* Header card */}
+      <div className="card" style={{ padding: '32px 32px 24px' }}>
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{ width: 88, height: 88, borderRadius: '50%', background: 'var(--primary)', display: 'grid', placeItems: 'center', fontSize: 28, fontWeight: 700, color: 'white', flexShrink: 0 }}>SD</div>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>{user.name}</h2>
+            <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 10 }}>{user.jabatan} · {user.unit}</div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <span className="chip green">Aktif</span>
+              <span className="chip gray" style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Icon name="pin" size={12}/> {user.lokasi}</span>
+              <span className="chip gray" style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Icon name="cal" size={12}/> Bergabung {user.joined}</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-secondary"><Icon name="download" size={14}/> Unduh CV</button>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 0 }}>
+        {/* Info Pribadi */}
+        <div className="card">
+          <div className="card-head"><h3 className="card-title">Informasi Pribadi</h3></div>
+          <div className="card-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            <Field label="NIK KARYAWAN" value={user.id}/>
+            <Field label="STATUS" value="Aktif"/>
+            <Field label="JENIS KELAMIN" value={user.gender}/>
+            <Field label="TANGGAL LAHIR" value={user.dob}/>
+            <Field label="PENDIDIKAN TERAKHIR" value={user.pendidikan}/>
+            <Field label="NOMOR HP" value={user.phone}/>
+            <Field label="EMAIL" value={user.email}/>
+            <Field label="LOKASI KERJA" value={user.lokasi}/>
+          </div>
+        </div>
+
+        {/* Info Jabatan */}
+        <div className="card">
+          <div className="card-head"><h3 className="card-title">Informasi Jabatan</h3></div>
+          <div className="card-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            <Field label="JABATAN" value={user.jabatan}/>
+            <Field label="DEPARTEMEN" value={user.dept}/>
+            <Field label="UNIT / ENTITAS" value={user.unit}/>
+            <Field label="ATASAN LANGSUNG" value="Direktur SDM & Umum"/>
+            <Field label="TANGGAL BERGABUNG" value={user.joined}/>
+            <Field label="MASA KERJA" value="16 Tahun 9 Bulan"/>
+            <Field label="GOLONGAN" value="IV-B"/>
+            <Field label="GRADE" value="G-16"/>
+          </div>
+        </div>
+      </div>
+
+      {/* Riwayat Jabatan */}
+      <div className="card" style={{ marginTop: 0, overflow: 'hidden' }}>
+        <div className="card-head">
+          <div>
+            <h3 className="card-title">Riwayat Jabatan</h3>
+            <p className="card-subtitle">Perjalanan karir di Pupuk Indonesia Group</p>
+          </div>
+        </div>
+        <div style={{ padding: '8px 24px 24px' }}>
+          {riwayat.map((r, i) => (
+            <div key={i} style={{ display: 'flex', gap: 16, paddingBottom: i < riwayat.length - 1 ? 20 : 0, position: 'relative' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                <div style={{ width: 12, height: 12, borderRadius: '50%', background: i === 0 ? 'var(--primary)' : 'var(--border)', border: '2px solid', borderColor: i === 0 ? 'var(--primary)' : 'var(--border)', marginTop: 3 }}/>
+                {i < riwayat.length - 1 && <div style={{ width: 2, flex: 1, background: 'var(--border-soft)', marginTop: 4 }}/>}
+              </div>
+              <div style={{ flex: 1, paddingBottom: 4 }}>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>{r.jabatan}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>{r.unit} · {r.tahun}</div>
+                <span className={`chip ${r.tipe === 'Promosi' ? 'green' : r.tipe === 'Rotasi' ? 'blue' : 'gray'}`} style={{ marginTop: 6, fontSize: 11 }}>{r.tipe}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+// REKAP PAGE
+// ─────────────────────────────────────────────
+const RekapPage = () => {
+  const statCards = [
+    { label: 'Total Rekap Dibuat', value: '248', sub: 'Bulan Mei 2026', icon: 'download', color: 'green' },
+    { label: 'Rekap Diunduh',      value: '189', sub: '76.2% dari total',   icon: 'users',    color: 'blue'  },
+    { label: 'Rekap Terjadwal',    value: '12',  sub: '3 akan segera dikirm', icon: 'cal',   color: 'amber' },
+    { label: 'Rekap Gagal',        value: '2',   sub: 'Perlu tindakan',    icon: 'info',     color: 'red'   },
+  ];
+
+  const rekapList = [
+    { id: 'RKP-001', nama: 'Rekap Kehadiran Mei 2026',       tipe: 'Kehadiran',  unit: 'Semua Unit',          tgl: '10 Mei 2026', status: 'selesai',  format: 'XLSX' },
+    { id: 'RKP-002', nama: 'Rekap Cuti & Izin April 2026',   tipe: 'Cuti',       unit: 'Semua Unit',          tgl: '01 Mei 2026', status: 'selesai',  format: 'PDF'  },
+    { id: 'RKP-003', nama: 'Rekap Lembur Q1 2026',           tipe: 'Lembur',     unit: 'Petrokimia Gresik',   tgl: '05 Apr 2026', status: 'selesai',  format: 'XLSX' },
+    { id: 'RKP-004', nama: 'Rekap Headcount Bulanan Apr',    tipe: 'Headcount',  unit: 'Semua Unit',          tgl: '01 Apr 2026', status: 'selesai',  format: 'PDF'  },
+    { id: 'RKP-005', nama: 'Rekap Rekrutmen Batch 12',       tipe: 'Rekrutmen',  unit: 'Holding HQ',          tgl: '28 Mar 2026', status: 'proses',   format: 'XLSX' },
+    { id: 'RKP-006', nama: 'Rekap Pelatihan K3 Bontang',     tipe: 'Pelatihan',  unit: 'Pupuk Kaltim',        tgl: '15 Mar 2026', status: 'gagal',    format: 'PDF'  },
+    { id: 'RKP-007', nama: 'Rekap Turnover YTD 2026',        tipe: 'Turnover',   unit: 'Semua Unit',          tgl: '01 Mar 2026', status: 'selesai',  format: 'PDF'  },
+  ];
+
+  const statusMap = { selesai: { lbl: 'Selesai', cls: 'green' }, proses: { lbl: 'Diproses', cls: 'amber' }, gagal: { lbl: 'Gagal', cls: 'red' } };
+
+  return (
+    <div>
+      <div className="page-title">
+        <div>
+          <h1>Rekap</h1>
+          <div className="crumbs">
+            <span>Pupuk Indonesia</span><span className="sep"></span>
+            <span className="now">Rekap</span>
+          </div>
+        </div>
+        <button className="btn btn-primary"><Icon name="plus" size={14}/> Buat Rekap Baru</button>
+      </div>
+
+      <div className="grid-kpi">
+        {statCards.map((s, i) => (
+          <div className="card kpi" key={i}>
+            <div className="kpi-head">
+              <div className={`kpi-icon ${s.color}`}><Icon name={s.icon} size={26} strokeWidth={1.6}/></div>
+            </div>
+            <div className="kpi-label">{s.label}</div>
+            <div className="kpi-value tnum">{s.value}</div>
+            <div className="kpi-foot">{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="card" style={{ overflow: 'hidden' }}>
+        <div className="card-head">
+          <div>
+            <h3 className="card-title">Daftar Rekap</h3>
+            <p className="card-subtitle">Rekap yang pernah dibuat di sistem</p>
+          </div>
+          <button className="btn btn-secondary"><Icon name="download" size={14}/> Export Semua</button>
+        </div>
+        <div className="filterbar">
+          <div className="filter-input">
+            <Icon name="search" size={16}/>
+            <input placeholder="Cari rekap…"/>
+          </div>
+          <button className="filter-select">Tipe: Semua <Icon name="chevd" size={14}/></button>
+          <button className="filter-select">Unit: Semua <Icon name="chevd" size={14}/></button>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Nama Rekap</th>
+                <th>Tipe</th>
+                <th>Unit</th>
+                <th>Format</th>
+                <th>Tanggal</th>
+                <th>Status</th>
+                <th style={{ textAlign: 'right' }}>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rekapList.map(r => {
+                const s = statusMap[r.status];
+                return (
+                  <tr key={r.id}>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{r.nama}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{r.id}</div>
+                    </td>
+                    <td><span className="chip gray">{r.tipe}</span></td>
+                    <td>{r.unit}</td>
+                    <td><span className="chip blue">{r.format}</span></td>
+                    <td className="muted tnum">{r.tgl}</td>
+                    <td><span className={`chip ${s.cls}`}>{s.lbl}</span></td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                        <button className="icon-btn" style={{ width: 32, height: 32 }} title="Unduh"><Icon name="download" size={15}/></button>
+                        <button className="icon-btn" style={{ width: 32, height: 32 }} title="Lihat"><Icon name="eye" size={15}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+// PENCARIAN PAGE
+// ─────────────────────────────────────────────
+const PencarianPage = () => {
+  const [query, setQuery] = React.useState('');
+  const [activeFilter, setActiveFilter] = React.useState('all');
+
+  const allResults = [
+    ...EMPLOYEES.map(e => ({ type: 'karyawan', id: e.id, title: e.name, sub: `${e.jabatan} · ${e.unit}`, meta: e.lokasi, chip: 'Karyawan', chipCls: 'green' })),
+    ...SURAT.map(s => ({ type: 'surat', id: s.id, title: s.judul, sub: `${s.no} · ${s.pembuat}`, meta: s.tanggal, chip: 'Surat', chipCls: 'blue' })),
+    ...ARSIP_AKTIF.map(a => ({ type: 'arsip', id: a.id, title: a.judul, sub: `${a.kode} · ${a.unit}`, meta: a.tgl_masuk, chip: 'Arsip Aktif', chipCls: 'amber' })),
+  ];
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? allResults.filter(r =>
+        (activeFilter === 'all' || r.type === activeFilter) &&
+        (r.title.toLowerCase().includes(q) || r.sub.toLowerCase().includes(q) || r.id.toLowerCase().includes(q))
+      )
+    : [];
+
+  const filters = [
+    { key: 'all',      lbl: 'Semua' },
+    { key: 'karyawan', lbl: 'Karyawan' },
+    { key: 'surat',    lbl: 'Surat'    },
+    { key: 'arsip',    lbl: 'Arsip'    },
+  ];
+
+  return (
+    <div>
+      <div className="page-title">
+        <div>
+          <h1>Pencarian</h1>
+          <div className="crumbs">
+            <span>Pupuk Indonesia</span><span className="sep"></span>
+            <span className="now">Pencarian</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: 24 }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16 }}>
+          <div className="filter-input" style={{ flex: 1, fontSize: 15 }}>
+            <Icon name="search" size={18} color="var(--primary)"/>
+            <input autoFocus placeholder="Cari karyawan, surat, arsip, atau dokumen…" value={query} onChange={e => setQuery(e.target.value)} style={{ fontSize: 15 }}/>
+          </div>
+          {query && <button className="btn btn-secondary" onClick={() => setQuery('')}><Icon name="x" size={14}/></button>}
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {filters.map(f => (
+            <button key={f.key} onClick={() => setActiveFilter(f.key)}
+              className={activeFilter === f.key ? 'btn btn-primary' : 'btn btn-secondary'}
+              style={{ fontSize: 12, padding: '6px 14px' }}>
+              {f.lbl}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {query.length > 0 && (
+        <div className="card" style={{ overflow: 'hidden', marginTop: 0 }}>
+          <div className="card-head">
+            <div>
+              <h3 className="card-title">Hasil Pencarian</h3>
+              <p className="card-subtitle">{filtered.length} hasil untuk "{query}"</p>
+            </div>
+          </div>
+          {filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 24px', color: 'var(--text-secondary)' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+              Tidak ada hasil untuk "{query}"
+            </div>
+          ) : filtered.map((r, i) => (
+            <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 24px', borderBottom: i < filtered.length - 1 ? '1px solid var(--border-soft)' : 'none' }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: r.chipCls === 'green' ? 'var(--primary)' : r.chipCls === 'blue' ? '#0095D9' : '#FFAB00', flexShrink: 0 }}/>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>{r.title}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>{r.sub}</div>
+              </div>
+              <span className="muted tnum" style={{ fontSize: 12 }}>{r.meta}</span>
+              <span className={`chip ${r.chipCls}`} style={{ fontSize: 11 }}>{r.chip}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!query && (
+        <div className="card" style={{ padding: 32, textAlign: 'center' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+          <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Cari di seluruh sistem</div>
+          <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Ketik nama karyawan, nomor surat, kode arsip, atau kata kunci lainnya</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+// MASTER DATA PAGES
+// ─────────────────────────────────────────────
+const MasterDataPage = ({ title, subtitle, crumb, columns, data: rows, onAdd }) => {
+  const [search, setSearch] = React.useState('');
+  const filtered = search
+    ? rows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(search.toLowerCase())))
+    : rows;
+
+  return (
+    <div>
+      <div className="page-title">
+        <div>
+          <h1>{title}</h1>
+          <div className="crumbs">
+            <span>Pupuk Indonesia</span><span className="sep"></span>
+            <span>Master Data</span><span className="sep"></span>
+            <span className="now">{crumb}</span>
+          </div>
+        </div>
+        <button className="btn btn-primary" onClick={onAdd}><Icon name="plus" size={14}/> Tambah {crumb}</button>
+      </div>
+      <div className="card" style={{ overflow: 'hidden' }}>
+        <div className="card-head">
+          <div>
+            <h3 className="card-title">{title}</h3>
+            <p className="card-subtitle">{subtitle}</p>
+          </div>
+          <button className="btn btn-secondary"><Icon name="download" size={14}/> Export</button>
+        </div>
+        <div className="filterbar">
+          <div className="filter-input">
+            <Icon name="search" size={16}/>
+            <input placeholder={`Cari ${crumb.toLowerCase()}…`} value={search} onChange={e => setSearch(e.target.value)}/>
+          </div>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="tbl">
+            <thead>
+              <tr>
+                {columns.map(col => <th key={col.key} style={col.style}>{col.label}</th>)}
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((row, i) => (
+                <tr key={row.id || i}>
+                  {columns.map(col => (
+                    <td key={col.key}>
+                      {col.render ? col.render(row[col.key], row) : row[col.key]}
+                    </td>
+                  ))}
+                  <td>
+                    <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                      <button className="icon-btn" style={{ width: 32, height: 32 }}><Icon name="eye" size={15}/></button>
+                      <button className="icon-btn" style={{ width: 32, height: 32 }}><Icon name="dotsV" size={15}/></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="pagi">
+          <span>Menampilkan <b>{filtered.length}</b> dari {rows.length} data</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MasterJenisSuratPage = () => (
+  <MasterDataPage
+    title="Jenis Surat" subtitle={`${MASTER_JENIS_SURAT.length} jenis surat terdaftar`} crumb="Jenis Surat"
+    data={MASTER_JENIS_SURAT}
+    columns={[
+      { key: 'kode',  label: 'Kode',     style: { width: 80 } },
+      { key: 'nama',  label: 'Nama Jenis Surat' },
+      { key: 'deskripsi', label: 'Deskripsi' },
+      { key: 'kategori',  label: 'Kategori', render: v => <span className="chip gray">{v}</span> },
+      { key: 'aktif', label: 'Status', render: v => <span className={`chip ${v ? 'green' : 'gray'}`}>{v ? 'Aktif' : 'Nonaktif'}</span> },
+    ]}
+  />
+);
+
+const MasterKlasifikasiPage = () => (
+  <MasterDataPage
+    title="Klasifikasi Surat" subtitle={`${MASTER_KLASIFIKASI.length} klasifikasi terdaftar`} crumb="Klasifikasi"
+    data={MASTER_KLASIFIKASI}
+    columns={[
+      { key: 'kode',  label: 'Kode',  style: { width: 80 } },
+      { key: 'nama',  label: 'Nama Klasifikasi' },
+      { key: 'aktif', label: 'Status', render: v => <span className={`chip ${v ? 'green' : 'gray'}`}>{v ? 'Aktif' : 'Nonaktif'}</span> },
+    ]}
+  />
+);
+
+const MasterUnitPage = () => (
+  <MasterDataPage
+    title="Unit Kerja" subtitle={`${MASTER_UNIT.length} unit terdaftar`} crumb="Unit Kerja"
+    data={MASTER_UNIT}
+    columns={[
+      { key: 'kode',   label: 'Kode',  style: { width: 90 } },
+      { key: 'nama',   label: 'Nama Unit' },
+      { key: 'tipe',   label: 'Tipe',  render: v => <span className={`chip ${v === 'Holding' ? 'blue' : 'gray'}`}>{v}</span> },
+      { key: 'lokasi', label: 'Lokasi' },
+      { key: 'aktif',  label: 'Status', render: v => <span className={`chip ${v ? 'green' : 'gray'}`}>{v ? 'Aktif' : 'Nonaktif'}</span> },
+    ]}
+  />
+);
+
+// ─────────────────────────────────────────────
+// ARSIP PAGES
+// ─────────────────────────────────────────────
+const STATUS_ARSIP_AKTIF = {
+  'tersedia':  { lbl: 'Tersedia',  cls: 'green' },
+  'dipinjam':  { lbl: 'Dipinjam',  cls: 'amber' },
+};
+const STATUS_ARSIP_INAKTIF = {
+  'aktif':          { lbl: 'Aktif',           cls: 'gray'  },
+  'jadwal-musnah':  { lbl: 'Jadwal Musnah',   cls: 'red'   },
+};
+
+const ArsipTable = ({ rows, statusMap, extraCols }) => {
+  const [search, setSearch] = React.useState('');
+  const filtered = search ? rows.filter(r => r.judul.toLowerCase().includes(search.toLowerCase()) || r.kode.toLowerCase().includes(search.toLowerCase())) : rows;
+  return (
+    <>
+      <div className="filterbar">
+        <div className="filter-input">
+          <Icon name="search" size={16}/>
+          <input placeholder="Cari arsip…" value={search} onChange={e => setSearch(e.target.value)}/>
+        </div>
+        <button className="filter-select">Unit: Semua <Icon name="chevd" size={14}/></button>
+        <button className="filter-select">Jenis: Semua <Icon name="chevd" size={14}/></button>
+        <div style={{ flex: 1 }}/>
+        <button className="btn btn-ghost"><Icon name="download" size={16}/></button>
+      </div>
+      <div style={{ overflowX: 'auto' }}>
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th style={{ width: 36 }}><input type="checkbox"/></th>
+              <th>Judul Dokumen</th>
+              <th>Unit</th>
+              <th>Jenis</th>
+              {extraCols.map(c => <th key={c.key}>{c.label}</th>)}
+              <th>Retensi</th>
+              <th>Lokasi</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(r => {
+              const s = statusMap[r.status] || { lbl: r.status, cls: 'gray' };
+              return (
+                <tr key={r.id}>
+                  <td><input type="checkbox"/></td>
+                  <td>
+                    <div style={{ fontWeight: 600 }}>{r.judul}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{r.kode}</div>
+                  </td>
+                  <td style={{ fontSize: 13 }}>{r.unit}</td>
+                  <td><span className="chip gray">{r.jenis}</span></td>
+                  {extraCols.map(c => <td key={c.key} className="muted tnum">{r[c.key]}</td>)}
+                  <td><span className={`chip ${r.retensi === 'Permanen' ? 'blue' : 'gray'}`}>{r.retensi}</span></td>
+                  <td className="muted">{r.lokasi}</td>
+                  <td><span className={`chip ${s.cls}`}>{s.lbl}</span></td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button className="icon-btn" style={{ width: 32, height: 32 }}><Icon name="eye" size={15}/></button>
+                      <button className="icon-btn" style={{ width: 32, height: 32 }}><Icon name="dotsV" size={15}/></button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className="pagi">
+        <span>Menampilkan <b>{filtered.length}</b> dari {rows.length} arsip</span>
+      </div>
+    </>
+  );
+};
+
+const ArsipAktifPage = ({ subView }) => {
+  const [tab, setTab] = React.useState(subView === 'arsip-a-pinjam' ? 'pinjam' : 'daftar');
+  const dipinjam = ARSIP_AKTIF.filter(a => a.status === 'dipinjam');
+
+  return (
+    <div>
+      <div className="page-title">
+        <div>
+          <h1>Manajemen Arsip Aktif</h1>
+          <div className="crumbs">
+            <span>Pupuk Indonesia</span><span className="sep"></span>
+            <span className="now">{tab === 'pinjam' ? 'Peminjaman' : 'Daftar Arsip'}</span>
+          </div>
+        </div>
+        <button className="btn btn-primary"><Icon name="plus" size={14}/> Tambah Arsip</button>
+      </div>
+      <div className="card" style={{ overflow: 'hidden' }}>
+        <div style={{ padding: '0 24px', borderBottom: '1px solid var(--border-soft)', display: 'flex', gap: 32 }}>
+          {[{key:'daftar',lbl:'Daftar Arsip',cnt:ARSIP_AKTIF.length},{key:'pinjam',lbl:'Peminjaman',cnt:dipinjam.length}].map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)} style={{
+              padding: '14px 0', borderBottom: tab === t.key ? '2px solid var(--text)' : '2px solid transparent',
+              color: tab === t.key ? 'var(--text)' : 'var(--text-secondary)',
+              fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              {t.lbl} <span className={`chip ${tab===t.key?'solid':'gray'}`} style={{fontSize:11}}>{t.cnt}</span>
+            </button>
+          ))}
+        </div>
+        <ArsipTable
+          rows={tab === 'pinjam' ? dipinjam : ARSIP_AKTIF}
+          statusMap={STATUS_ARSIP_AKTIF}
+          extraCols={[{ key: 'tgl_masuk', label: 'Tgl Masuk' }]}
+        />
+      </div>
+    </div>
+  );
+};
+
+const ArsipInaktifPage = ({ subView }) => {
+  const [tab, setTab] = React.useState(subView === 'arsip-i-musnah' ? 'musnah' : 'daftar');
+  const jadwalMusnah = ARSIP_INAKTIF.filter(a => a.status === 'jadwal-musnah');
+
+  return (
+    <div>
+      <div className="page-title">
+        <div>
+          <h1>Manajemen Arsip Inaktif</h1>
+          <div className="crumbs">
+            <span>Pupuk Indonesia</span><span className="sep"></span>
+            <span className="now">{tab === 'musnah' ? 'Pemusnahan' : 'Daftar Arsip'}</span>
+          </div>
+        </div>
+        <button className="btn btn-primary"><Icon name="plus" size={14}/> Tambah Arsip</button>
+      </div>
+      <div className="card" style={{ overflow: 'hidden' }}>
+        <div style={{ padding: '0 24px', borderBottom: '1px solid var(--border-soft)', display: 'flex', gap: 32 }}>
+          {[{key:'daftar',lbl:'Daftar Arsip',cnt:ARSIP_INAKTIF.length},{key:'musnah',lbl:'Jadwal Pemusnahan',cnt:jadwalMusnah.length}].map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)} style={{
+              padding: '14px 0', borderBottom: tab === t.key ? '2px solid var(--text)' : '2px solid transparent',
+              color: tab === t.key ? 'var(--text)' : 'var(--text-secondary)',
+              fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              {t.lbl} <span className={`chip ${tab===t.key?'solid':'gray'}`} style={{fontSize:11}}>{t.cnt}</span>
+            </button>
+          ))}
+        </div>
+        {tab === 'musnah' && (
+          <div style={{ margin: '16px 24px 0', padding: '12px 16px', background: 'var(--error-bg)', borderRadius: 10, display: 'flex', gap: 10, alignItems: 'center', fontSize: 13, color: '#B71D18' }}>
+            <Icon name="info" size={16} strokeWidth={2.2}/>
+            <span><b>{jadwalMusnah.length} arsip</b> telah melewati masa retensi dan dijadwalkan untuk dimusnahkan. Konfirmasi diperlukan sebelum proses pemusnahan.</span>
+          </div>
+        )}
+        <ArsipTable
+          rows={tab === 'musnah' ? jadwalMusnah : ARSIP_INAKTIF}
+          statusMap={STATUS_ARSIP_INAKTIF}
+          extraCols={[{ key: 'tgl_pindah', label: 'Tgl Dipindahkan' }]}
+        />
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+// PERMISSION DOCUMENT PAGE
+// ─────────────────────────────────────────────
+const PermissionDocumentPage = () => {
+  const perms = [
+    { id: 'PRM-001', dokumen: 'Laporan Keuangan Konsolidasi 2025',     level: 'Rahasia',        akses: ['Direksi', 'VP Keuangan', 'Audit Internal'],   tgl: '01 Jan 2026', pemberi: 'CFO' },
+    { id: 'PRM-002', dokumen: 'Data Karyawan — Gaji & Tunjangan',      level: 'Sangat Rahasia', akses: ['VP HC', 'HR Payroll', 'Direksi'],             tgl: '15 Jan 2026', pemberi: 'CHRO' },
+    { id: 'PRM-003', dokumen: 'Strategi Ekspansi Bisnis 2026–2030',    level: 'Rahasia',        akses: ['Direksi', 'VP Strategi'],                     tgl: '10 Feb 2026', pemberi: 'CEO' },
+    { id: 'PRM-004', dokumen: 'Laporan Audit Internal Q4 2025',        level: 'Terbatas',       akses: ['Direksi', 'Komite Audit', 'Internal Audit'],  tgl: '20 Feb 2026', pemberi: 'Direktur Audit' },
+    { id: 'PRM-005', dokumen: 'Kontrak Supplier Bahan Baku Prioritas', level: 'Terbatas',       akses: ['VP Pengadaan', 'Direksi Operasional'],        tgl: '05 Mar 2026', pemberi: 'COO' },
+  ];
+  const levelCls = { 'Rahasia': 'amber', 'Sangat Rahasia': 'red', 'Terbatas': 'blue', 'Biasa': 'gray' };
+
+  return (
+    <div>
+      <div className="page-title">
+        <div>
+          <h1>Permission Document</h1>
+          <div className="crumbs">
+            <span>Pupuk Indonesia</span><span className="sep"></span>
+            <span className="now">Permission Document</span>
+          </div>
+        </div>
+        <button className="btn btn-primary"><Icon name="plus" size={14}/> Atur Permission Baru</button>
+      </div>
+      <div className="card" style={{ overflow: 'hidden' }}>
+        <div className="card-head">
+          <div>
+            <h3 className="card-title">Daftar Hak Akses Dokumen</h3>
+            <p className="card-subtitle">{perms.length} dokumen dengan permission terdaftar</p>
+          </div>
+        </div>
+        <div className="filterbar">
+          <div className="filter-input"><Icon name="search" size={16}/><input placeholder="Cari dokumen…"/></div>
+          <button className="filter-select">Level: Semua <Icon name="chevd" size={14}/></button>
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Nama Dokumen</th>
+                <th>Level Kerahasiaan</th>
+                <th>Pihak yang Diizinkan</th>
+                <th>Tgl Ditetapkan</th>
+                <th>Pemberi Izin</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {perms.map(p => (
+                <tr key={p.id}>
+                  <td>
+                    <div style={{ fontWeight: 600 }}>{p.dokumen}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{p.id}</div>
+                  </td>
+                  <td><span className={`chip ${levelCls[p.level] || 'gray'}`}>{p.level}</span></td>
+                  <td>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {p.akses.map(a => <span key={a} className="chip gray" style={{ fontSize: 11 }}>{a}</span>)}
+                    </div>
+                  </td>
+                  <td className="muted tnum">{p.tgl}</td>
+                  <td style={{ fontSize: 13 }}>{p.pemberi}</td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button className="icon-btn" style={{ width: 32, height: 32 }}><Icon name="eye" size={15}/></button>
+                      <button className="icon-btn" style={{ width: 32, height: 32 }}><Icon name="dotsV" size={15}/></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+// REKAP ARSIP PAGE
+// ─────────────────────────────────────────────
+const RekapArsipPage = () => {
+  const stats = [
+    { label: 'Total Arsip Aktif',   value: ARSIP_AKTIF.length,   icon: 'book',   color: 'green' },
+    { label: 'Total Arsip Inaktif', value: ARSIP_INAKTIF.length, icon: 'download', color: 'blue' },
+    { label: 'Sedang Dipinjam',     value: ARSIP_AKTIF.filter(a=>a.status==='dipinjam').length, icon: 'users', color: 'amber' },
+    { label: 'Jadwal Musnah',       value: ARSIP_INAKTIF.filter(a=>a.status==='jadwal-musnah').length, icon: 'info', color: 'red' },
+  ];
+  return (
+    <div>
+      <div className="page-title">
+        <div>
+          <h1>Rekap Arsip</h1>
+          <div className="crumbs">
+            <span>Pupuk Indonesia</span><span className="sep"></span>
+            <span className="now">Rekap Arsip</span>
+          </div>
+        </div>
+        <button className="btn btn-secondary"><Icon name="download" size={14}/> Export Rekap</button>
+      </div>
+      <div className="grid-kpi">
+        {stats.map((s, i) => (
+          <div className="card kpi" key={i}>
+            <div className="kpi-head">
+              <div className={`kpi-icon ${s.color}`}><Icon name={s.icon} size={26} strokeWidth={1.6}/></div>
+            </div>
+            <div className="kpi-label">{s.label}</div>
+            <div className="kpi-value tnum">{s.value}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <div className="card" style={{ overflow: 'hidden' }}>
+          <div className="card-head"><h3 className="card-title">Arsip Aktif per Unit</h3></div>
+          <div className="card-body">
+            {['Holding HQ', 'Petrokimia Gresik', 'Pupuk Kaltim', 'Pupuk Sriwidjaja', 'Pupuk Kujang', 'Pupuk Iskandar Muda'].map((u, i) => {
+              const cnt = [2,1,1,1,0,1][i];
+              const pct = Math.round(cnt / ARSIP_AKTIF.length * 100);
+              return (
+                <div className="demo-row" key={u}>
+                  <div className="demo-head"><span className="l">{u}</span><span className="r">{cnt} arsip · {pct}%</span></div>
+                  <div className="demo-bar"><div className="fill" style={{ width: `${pct * 2}%` }}></div></div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="card" style={{ overflow: 'hidden' }}>
+          <div className="card-head"><h3 className="card-title">Arsip per Jenis Dokumen</h3></div>
+          <div className="card-body">
+            {[
+              { jenis: 'Kontrak',         cnt: 2 },
+              { jenis: 'Laporan',         cnt: 3 },
+              { jenis: 'Notulensi',       cnt: 2 },
+              { jenis: 'Pengadaan',       cnt: 2 },
+              { jenis: 'Berkas Rekrutmen',cnt: 1 },
+              { jenis: 'Laporan Audit',   cnt: 1 },
+            ].map((j, i) => {
+              const total = 11;
+              const pct = Math.round(j.cnt / total * 100);
+              return (
+                <div className="demo-row" key={j.jenis}>
+                  <div className="demo-head"><span className="l">{j.jenis}</span><span className="r">{j.cnt} dok · {pct}%</span></div>
+                  <div className="demo-bar"><div className="fill" style={{ width: `${pct * 2.5}%` }}></div></div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 Object.assign(window, { Sidebar, Topbar, KpiCard, WelcomeBanner, ApprovalRow, UpcomingRow, EmployeeTable, SuratTable, SuratDetailModal, SuratAdvFilterModal, BuatSuratBaru });
