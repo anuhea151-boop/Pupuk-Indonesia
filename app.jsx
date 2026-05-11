@@ -39,7 +39,9 @@ function App() {
   }, [flash]);
 
   const handleSubmitSurat = (newSurat) => {
-    setSuratList((prev) => [newSurat, ...prev]);
+    const pov = POV_OPTIONS.find(p => p.id === povUserId);
+    const tagged = { ...newSurat, pembuatId: povUserId, pembuat: pov?.name || newSurat.pembuat };
+    setSuratList((prev) => [tagged, ...prev]);
     setActiveView('manajemen-surat');
     setFlash({
       tone: 'success',
@@ -111,6 +113,11 @@ function App() {
       return <BuatSuratBaru onBack={() => setActiveView('manajemen-surat')} onSubmit={handleSubmitSurat}/>;
     }
     if (activeView === 'manajemen-surat') {
+      const povMeta = POV_OPTIONS.find(p => p.id === povUserId);
+      const isDrafter = povMeta?.type === 'drafter';
+      const visibleSurat = isDrafter
+        ? suratList.filter(s => s.pembuatId === povUserId)
+        : suratList;
       return (
         <>
           <div className="page-title">
@@ -125,6 +132,12 @@ function App() {
               </div>
             </div>
           </div>
+          {isDrafter && (
+            <div style={{ padding: '12px 16px', background: '#F3EDFF', borderRadius: 12, display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: '#3F1E8F' }}>
+              <Icon name="info" size={16} strokeWidth={2} color="#7635DC" style={{ flexShrink: 0, marginTop: 1 }}/>
+              <span>Sebagai <b>Drafter</b>, Anda hanya melihat surat yang Anda buat sendiri. Klik <b>Buat Surat Baru</b> untuk membuat surat baru, atau gunakan tombol <b>Tarik Kembali</b> pada surat yang sudah disubmit jika perlu direvisi.</span>
+            </div>
+          )}
           {flash && (
             <div className={`flash flash-${flash.tone}`}>
               <span className="flash-ic"><Icon name={flash.tone === 'success' ? 'check' : 'info'} size={16} strokeWidth={2.4}/></span>
@@ -137,7 +150,7 @@ function App() {
           )}
           <SuratTable
             onNav={setActiveView}
-            suratList={suratList}
+            suratList={visibleSurat}
             onWithdraw={handleWithdrawSurat}
             onOpenLetter={(s) => {
               setOpenedSurat(s);

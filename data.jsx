@@ -141,6 +141,22 @@ const STATUS_SURAT_CHIP = {
 // ID pengguna yang sedang login (Sri Dewanti — VP Human Capital)
 const CURRENT_USER_ID = 'SD-00001';
 
+// Pemetaan nama pembuat surat → ID pegawai
+const PEMBUAT_ID_MAP = {
+  'Ahmad Fauzi':      'PI-09112',
+  'Andi Pratama':     'PI-07863',
+  'Cahyo Nugroho':    'PI-15912',
+  'Putri Maharani':   'PI-16001',
+  'Dewi Lestari':     'PI-06234',
+  'Lestari Wibowo':   'PI-11055',
+  'Hendra Setiawan':  'PI-15721',
+  'Rini Anggraini':   'PI-14580',
+  'Maya Putri':       'PI-04812',
+  'Joko Susanto':     'PI-13290',
+  'Bambang Triyanto': 'PI-08421',
+  'Siti Nurhaliza':   'PI-12903',
+};
+
 const SURAT = [
   {
     id: 'SR-2026-0512', no: '001/PI/HR/V/2026',
@@ -236,7 +252,29 @@ const SURAT = [
   { id: 'SR-2026-0503', no: '010/PI/QC/V/2026',  judul: 'Berita Acara Pengujian Kualitas Urea Granular Mei 2026',   sifat: 'biasa',          kecepatan: 'biasa',         status: 'menunggu-approval',  tanggal: '05 Mei 2026', pembuat: 'Joko Susanto', av: 3, init: 'JS' },
   { id: 'SR-2026-0502', no: '011/PI/DIR/V/2026', judul: 'Nota Dinas Penyesuaian Tarif Distribusi Pupuk Bersubsidi', sifat: 'sangat-rahasia', kecepatan: 'sangat-segera', status: 'menunggu-approval',  tanggal: '05 Mei 2026', pembuat: 'Bambang Triyanto', av: 2, init: 'BT' },
   { id: 'SR-2026-0501', no: '012/PI/HR/V/2026',  judul: 'Surat Mutasi Karyawan Antar Anak Perusahaan Per Juni',     sifat: 'terbatas',       kecepatan: 'segera',        status: 'draft',              tanggal: '04 Mei 2026', pembuat: 'Siti Nurhaliza', av: 1, init: 'SN' },
+  // Surat milik Cahyo Nugroho (demo drafter POV)
+  {
+    id: 'SR-2026-0513', no: '013/PI/AUD/V/2026',
+    judul: 'Draft Surat Undangan Rapat Evaluasi Audit Internal Semester 1',
+    sifat: 'biasa', kecepatan: 'biasa', status: 'draft',
+    tanggal: '11 Mei 2026', pembuat: 'Cahyo Nugroho', av: 6, init: 'CN',
+    reviewers: [], approvers: [],
+  },
+  {
+    id: 'SR-2026-0514', no: '014/PI/AUD/V/2026',
+    judul: 'Laporan Tindak Lanjut Temuan Audit Internal Divisi Pemasaran',
+    sifat: 'terbatas', kecepatan: 'biasa', status: 'disetujui',
+    tanggal: '03 Mei 2026', pembuat: 'Cahyo Nugroho', av: 6, init: 'CN',
+    reviewers: [
+      { id: CURRENT_USER_ID, name: 'Sri Dewanti',      role: 'VP Human Capital',        reviewStatus: 'approved' },
+      { id: '2611582',        name: 'Linda Kurniawati', role: 'VP Legal & Compliance',   reviewStatus: 'approved' },
+    ],
+    approvers: [{ id: '2511437', name: 'Dr. Indra Permana', role: 'Direktur Operasi & Produksi', approveStatus: 'approved' }],
+  },
 ];
+
+// Tambahkan pembuatId ke setiap surat berdasarkan PEMBUAT_ID_MAP
+SURAT.forEach(s => { if (!s.pembuatId) s.pembuatId = PEMBUAT_ID_MAP[s.pembuat] || null; });
 
 // Daftar pegawai yang dapat menjadi reviewer/approver (untuk searchable dropdown)
 const PERSONNEL = [
@@ -339,7 +377,7 @@ const MASTER_UNIT = [
 ];
 
 Object.assign(window, {
-  CURRENT_USER_ID,
+  CURRENT_USER_ID, PEMBUAT_ID_MAP,
   ANAK_PERUSAHAAN, TOTAL_HEADCOUNT, HC_DISPLAY,
   HEADCOUNT_TREND, HIRE_EXIT,
   DEMOGRAFI_USIA, PENDING_APPROVALS, UPCOMING,
