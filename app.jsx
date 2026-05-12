@@ -111,24 +111,29 @@ function App() {
         setDetailContext(null);
         setActiveView(isReviewerCtx ? 'reviewer' : isApproverCtx ? 'approver' : 'manajemen-surat');
       };
+      const saveEdited = (updated) => {
+        if (updated) setSuratList(prev => prev.map(s => s.id === updated.id ? updated : s));
+        handleBackFromDetail();
+      };
       const reviewerActionsForSurat = isReviewerCtx ? {
         onApprove: () => { handleReviewerAction(openedSurat.id, 'approve');        handleBackFromDetail(); },
         onReturn:  () => { handleReviewerAction(openedSurat.id, 'return-drafter'); handleBackFromDetail(); },
         onCancel:  () => { handleReviewerAction(openedSurat.id, 'cancel');         handleBackFromDetail(); },
-        onSave:    () => { handleBackFromDetail(); },
+        onSave:    saveEdited,
       } : isApproverCtx ? {
         onApprove: () => { handleApproverAction(openedSurat.id, 'finalize');       handleBackFromDetail(); },
         onReturn:  () => { handleApproverAction(openedSurat.id, 'return');         handleBackFromDetail(); },
         onCancel:  () => { handleApproverAction(openedSurat.id, 'cancel');         handleBackFromDetail(); },
-        onSave:    () => { handleBackFromDetail(); },
+        onSave:    saveEdited,
       } : null;
+      const isActionCtx = isReviewerCtx || isApproverCtx;
       return (
         <BuatSuratBaru
-          readOnly
+          readOnly={!isActionCtx}
           surat={openedSurat}
           onBack={handleBackFromDetail}
           onSubmit={() => {}}
-          onWithdraw={isReviewerCtx ? null : handleWithdrawSurat}
+          onWithdraw={isActionCtx ? null : handleWithdrawSurat}
           reviewerActions={reviewerActionsForSurat}
         />
       );

@@ -1416,7 +1416,7 @@ const BuatSuratBaru = ({ onBack, onSubmit, readOnly, surat, onWithdraw, reviewer
   const [confirmReviewerAction, setConfirmReviewerAction] = React.useState(null); // 'approve'|'return-drafter'|'cancel'|null
 
   React.useEffect(() => {
-    if (!readOnly || !surat) return;
+    if (!surat) return;
     const f = normalizeSuratToFormSnapshot(surat);
     setConfirmWithdrawDetail(false);
     setDetailTab('surat');
@@ -1459,6 +1459,18 @@ const BuatSuratBaru = ({ onBack, onSubmit, readOnly, surat, onWithdraw, reviewer
     setErrors(e);
     return Object.keys(e).length === 0;
   };
+
+  const buildUpdatedSurat = () => ({
+    ...surat,
+    judul: judul.trim(),
+    sifat: SIFAT_KEY[sifat] || surat.sifat,
+    kecepatan: KEC_KEY[kecepatan] || surat.kecepatan,
+    jenis, template, klasifikasi, keterangan, ringkas,
+    reviewers: reviewers.map(r => r.person).filter(Boolean),
+    approvers: approvers.map(a => a.person).filter(Boolean),
+    tujuan, cc,
+    attachments: attachments.map(({ id, name, size, type }) => ({ id, name, size, type })),
+  });
 
   const buildSurat = (status) => {
     const now = new Date();
@@ -1550,20 +1562,20 @@ const BuatSuratBaru = ({ onBack, onSubmit, readOnly, surat, onWithdraw, reviewer
   const awaitingReviewWithdraw = readOnly && surat && surat.status === 'menunggu-review' && onWithdraw;
 
   return (
-    <div className={`surat-form${readOnly ? ' surat-form-readonly' : ''}`} style={{ maxWidth: 1100, margin: '0 auto', width: '100%' }}>
+    <div className={`surat-form${(readOnly && !reviewerActions) ? ' surat-form-readonly' : ''}`} style={{ maxWidth: 1100, margin: '0 auto', width: '100%' }}>
       {/* Header */}
-      <div className={`surat-form-header${readOnly && surat ? ' has-tabs' : ''}`}>
+      <div className={`surat-form-header${(readOnly || reviewerActions) && surat ? ' has-tabs' : ''}`}>
         <div className="surat-form-header-top">
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <button className="back" onClick={onBack} title="Kembali"><Icon name="chevl" size={20}/></button>
             <div>
-              <h1>{readOnly ? 'Detail Surat' : 'Buat Surat Baru'}</h1>
+              <h1>{(readOnly || reviewerActions) ? 'Detail Surat' : 'Buat Surat Baru'}</h1>
               <div className="crumbs">
                 <span>Pupuk Indonesia</span>
                 <span className="sep"></span>
                 <span>Manajemen Surat</span>
                 <span className="sep"></span>
-                <span className="now">{readOnly ? `Detail · ${surat && surat.no ? surat.no : ''}` : 'Buat Surat Baru'}</span>
+                <span className="now">{(readOnly || reviewerActions) ? `Detail · ${surat && surat.no ? surat.no : ''}` : 'Buat Surat Baru'}</span>
               </div>
             </div>
           </div>
@@ -1594,7 +1606,7 @@ const BuatSuratBaru = ({ onBack, onSubmit, readOnly, surat, onWithdraw, reviewer
                   <button type="button" className="btn btn-secondary" onClick={() => setConfirmReviewerAction('return-drafter')}>
                     <Icon name="chevl" size={14}/> Kembalikan
                   </button>
-                  <button type="button" className="btn btn-secondary" onClick={reviewerActions.onSave}>
+                  <button type="button" className="btn btn-secondary" onClick={() => reviewerActions.onSave(buildUpdatedSurat())}>
                     <Icon name="download" size={14}/> Simpan
                   </button>
                   <button type="button" className="btn btn-primary"   style={{ background: '#118D57', borderColor: '#118D57' }} onClick={() => setConfirmReviewerAction('approve')}>
