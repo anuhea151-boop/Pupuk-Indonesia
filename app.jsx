@@ -109,7 +109,7 @@ function App() {
       const handleBackFromDetail = () => {
         setOpenedSurat(null);
         setDetailContext(null);
-        setActiveView(isReviewerCtx ? 'reviewer' : isApproverCtx ? 'approver' : 'manajemen-surat');
+        setActiveView('manajemen-surat');
       };
       const saveEdited = (updated) => {
         if (updated) setSuratList(prev => prev.map(s => s.id === updated.id ? updated : s));
@@ -189,68 +189,6 @@ function App() {
               const isPendingApprover = s.status === 'menunggu-approval' &&
                 (s.approvers || []).some(a => a.id === povUserId);
               setDetailContext(isPendingReviewer ? 'reviewer' : isPendingApprover ? 'approver' : null);
-              setActiveView('detail-surat');
-            }}
-          />
-        </>
-      );
-    }
-    if (activeView === 'reviewer') {
-      const toReview = suratList.filter(s =>
-        s.status === 'menunggu-review' &&
-        (s.reviewers || []).some(r => r.id === povUserId && r.reviewStatus === 'pending')
-      );
-      return (
-        <>
-          <div className="page-title">
-            <div>
-              <h1>Reviewer</h1>
-              <div className="crumbs">
-                <span>Pupuk Indonesia</span><span className="sep"></span>
-                <span>Persetujuan Surat</span><span className="sep"></span>
-                <span className="now">Reviewer</span>
-              </div>
-            </div>
-          </div>
-          <SuratTable
-            onNav={setActiveView}
-            suratList={toReview}
-            onWithdraw={null}
-            currentUserId={povUserId}
-            onOpenLetter={(s) => {
-              setOpenedSurat(s);
-              setDetailContext('reviewer');
-              setActiveView('detail-surat');
-            }}
-          />
-        </>
-      );
-    }
-    if (activeView === 'approver') {
-      const toApprove = suratList.filter(s =>
-        s.status === 'menunggu-approval' &&
-        (s.approvers || []).some(a => a.id === povUserId)
-      );
-      return (
-        <>
-          <div className="page-title">
-            <div>
-              <h1>Approver</h1>
-              <div className="crumbs">
-                <span>Pupuk Indonesia</span><span className="sep"></span>
-                <span>Persetujuan Surat</span><span className="sep"></span>
-                <span className="now">Approver</span>
-              </div>
-            </div>
-          </div>
-          <SuratTable
-            onNav={setActiveView}
-            suratList={toApprove}
-            onWithdraw={null}
-            currentUserId={povUserId}
-            onOpenLetter={(s) => {
-              setOpenedSurat(s);
-              setDetailContext('approver');
               setActiveView('detail-surat');
             }}
           />
