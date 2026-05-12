@@ -2316,14 +2316,7 @@ const ReviewerPage = ({ suratList, onAction, currentUserId, onOpenLetter }) => {
     s.status === 'menunggu-review' &&
     (s.reviewers || []).some(r => r.id === ME && r.reviewStatus === 'pending')
   );
-  const allInReview = suratList.filter(s => s.status === 'menunggu-review');
-  const counts = {
-    total: toReview.length,
-    sangatSegera: toReview.filter(s => s.kecepatan === 'sangat-segera').length,
-    selesaiReview: allInReview.filter(s =>
-      (s.reviewers || []).find(r => r.id === ME)?.reviewStatus === 'approved'
-    ).length,
-  };
+  const counts = { total: toReview.length };
 
   return (
     <div>
@@ -2336,21 +2329,6 @@ const ReviewerPage = ({ suratList, onAction, currentUserId, onOpenLetter }) => {
             <span className="now">Reviewer</span>
           </div>
         </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 0 }}>
-        {[
-          { label: 'Perlu Ditinjau',  value: counts.total,         icon: 'eye',   color: 'amber', sub: 'menunggu review Anda' },
-          { label: 'Sangat Segera',   value: counts.sangatSegera,  icon: 'info',  color: 'red',   sub: 'prioritas tinggi'     },
-          { label: 'Sudah Disetujui', value: counts.selesaiReview, icon: 'check', color: 'green', sub: 'oleh Anda (belum all)'},
-        ].map((s, i) => (
-          <div className="card kpi" key={i}>
-            <div className="kpi-head"><div className={`kpi-icon ${s.color}`}><Icon name={s.icon} size={24} strokeWidth={1.6}/></div></div>
-            <div className="kpi-label">{s.label}</div>
-            <div className="kpi-value tnum">{s.value}</div>
-            <div className="kpi-foot">{s.sub}</div>
-          </div>
-        ))}
       </div>
 
       <div style={{ padding: '12px 16px', background: 'var(--warning-bg)', borderRadius: 12, display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: '#7A4F00' }}>
