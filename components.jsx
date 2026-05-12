@@ -1987,18 +1987,6 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
           onClick={e => { e.stopPropagation(); setDetailOpen(s); }}>
           <Icon name="eye" size={13}/> Detail
         </button>
-        <button className="btn btn-danger" style={{ fontSize: 12, padding: '6px 12px' }}
-          onClick={e => { e.stopPropagation(); setConfirm({ id: s.id, action: 'cancel' }); }}>
-          <Icon name="x" size={13} strokeWidth={2.4}/> Batalkan
-        </button>
-        <button className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }}
-          onClick={e => { e.stopPropagation(); setConfirm({ id: s.id, action: 'return-drafter' }); }}>
-          <Icon name="chevd" size={13}/> Kembalikan
-        </button>
-        <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 12px', background: '#118D57', borderColor: '#118D57' }}
-          onClick={e => { e.stopPropagation(); setConfirm({ id: s.id, action: 'approve' }); }}>
-          <Icon name="check" size={13} strokeWidth={2.4}/> Setujui
-        </button>
       </div>
     );
     if (mode === 'approver') return (
