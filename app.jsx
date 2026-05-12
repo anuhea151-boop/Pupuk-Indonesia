@@ -91,6 +91,7 @@ function App() {
       if (s.id !== id) return s;
       if (action === 'finalize') return { ...s, status: 'disetujui' };
       if (action === 'return')   return { ...s, status: 'menunggu-review' };
+      if (action === 'cancel')   return { ...s, status: 'dibatalkan' };
       return s;
     }));
   };
@@ -104,15 +105,21 @@ function App() {
   const renderContent = () => {
     if (activeView === 'detail-surat' && openedSurat) {
       const isReviewerCtx = detailContext === 'reviewer';
+      const isApproverCtx = detailContext === 'approver';
       const handleBackFromDetail = () => {
         setOpenedSurat(null);
         setDetailContext(null);
-        setActiveView(isReviewerCtx ? 'reviewer' : 'manajemen-surat');
+        setActiveView(isReviewerCtx ? 'reviewer' : isApproverCtx ? 'approver' : 'manajemen-surat');
       };
       const reviewerActionsForSurat = isReviewerCtx ? {
         onApprove: () => { handleReviewerAction(openedSurat.id, 'approve');        handleBackFromDetail(); },
         onReturn:  () => { handleReviewerAction(openedSurat.id, 'return-drafter'); handleBackFromDetail(); },
         onCancel:  () => { handleReviewerAction(openedSurat.id, 'cancel');         handleBackFromDetail(); },
+        onSave:    () => { handleBackFromDetail(); },
+      } : isApproverCtx ? {
+        onApprove: () => { handleApproverAction(openedSurat.id, 'finalize');       handleBackFromDetail(); },
+        onReturn:  () => { handleApproverAction(openedSurat.id, 'return');         handleBackFromDetail(); },
+        onCancel:  () => { handleApproverAction(openedSurat.id, 'cancel');         handleBackFromDetail(); },
         onSave:    () => { handleBackFromDetail(); },
       } : null;
       return (
@@ -174,7 +181,9 @@ function App() {
               setOpenedSurat(s);
               const isPendingReviewer = s.status === 'menunggu-review' &&
                 (s.reviewers || []).some(r => r.id === povUserId && r.reviewStatus === 'pending');
-              setDetailContext(isPendingReviewer ? 'reviewer' : null);
+              const isPendingApprover = s.status === 'menunggu-approval' &&
+                (s.approvers || []).some(a => a.id === povUserId);
+              setDetailContext(isPendingReviewer ? 'reviewer' : isPendingApprover ? 'approver' : null);
               setActiveView('detail-surat');
             }}
           />
@@ -182,7 +191,7 @@ function App() {
       );
     }
     if (activeView === 'reviewer')        return <ReviewerPage suratList={suratList} onAction={handleReviewerAction} currentUserId={povUserId} onOpenLetter={(s) => { setOpenedSurat(s); setDetailContext('reviewer'); setActiveView('detail-surat'); }}/>;
-    if (activeView === 'approver')        return <ApproverPage suratList={suratList} onAction={handleApproverAction} currentUserId={povUserId}/>;
+    if (activeView === 'approver')        return <ApproverPage suratList={suratList} onAction={handleApproverAction} currentUserId={povUserId} onOpenLetter={(s) => { setOpenedSurat(s); setDetailContext('approver'); setActiveView('detail-surat'); }}/>;
     if (activeView === 'inbox')           return <InboxPage/>;
     if (activeView === 'notif')           return <NotifikasiPage/>;
     if (activeView === 'profil-saya')     return <ProfilSayaPage/>;

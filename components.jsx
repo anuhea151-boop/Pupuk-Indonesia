@@ -586,13 +586,16 @@ const SuratTable = ({ onNav, suratList, onWithdraw, onOpenLetter, currentUserId 
       const me = currentUserId || CURRENT_USER_ID;
       const isReviewerMode = detailOpen.status === 'menunggu-review' &&
         (detailOpen.reviewers || []).some(r => r.id === me && r.reviewStatus === 'pending');
+      const isApproverMode = detailOpen.status === 'menunggu-approval' &&
+        (detailOpen.approvers || []).some(a => a.id === me);
+      const actionMode = isReviewerMode || isApproverMode;
       return (
         <SuratDetailModal
           surat={detailOpen}
           onClose={() => setDetailOpen(null)}
-          onWithdraw={isReviewerMode ? null : (onWithdraw ? (id) => { onWithdraw(id); } : null)}
+          onWithdraw={actionMode ? null : (onWithdraw ? (id) => { onWithdraw(id); } : null)}
           onOpenLetter={onOpenLetter || null}
-          reviewerMode={isReviewerMode}
+          reviewerMode={actionMode}
         />
       );
     })()}
@@ -2038,15 +2041,7 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
         <button className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }}
           onClick={e => { e.stopPropagation(); setDetailOpen(s); }}>
-          <Icon name="eye" size={13}/> Lihat
-        </button>
-        <button className="btn btn-danger" style={{ fontSize: 12, padding: '6px 12px' }}
-          onClick={e => { e.stopPropagation(); setConfirm({ id: s.id, action: 'return' }); }}>
-          <Icon name="x" size={13} strokeWidth={2.4}/> Tolak
-        </button>
-        <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 12px' }}
-          onClick={e => { e.stopPropagation(); setConfirm({ id: s.id, action: 'finalize' }); }}>
-          <Icon name="check" size={13} strokeWidth={2.4}/> Setujui
+          <Icon name="eye" size={13}/> Detail
         </button>
       </div>
     );
@@ -2300,8 +2295,8 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
           surat={detailOpen}
           onClose={() => setDetailOpen(null)}
           onWithdraw={null}
-          reviewerMode={mode === 'reviewer'}
-          onOpenLetter={mode === 'reviewer' && onOpenLetter
+          reviewerMode={mode === 'reviewer' || mode === 'approver'}
+          onOpenLetter={(mode === 'reviewer' || mode === 'approver') && onOpenLetter
             ? (s) => { setDetailOpen(null); onOpenLetter(s); }
             : null}
         />
@@ -2350,17 +2345,12 @@ const ReviewerPage = ({ suratList, onAction, currentUserId, onOpenLetter }) => {
   );
 };
 
-const ApproverPage = ({ suratList, onAction, currentUserId }) => {
+const ApproverPage = ({ suratList, onAction, currentUserId, onOpenLetter }) => {
   const ME = currentUserId || CURRENT_USER_ID;
   const toApprove = suratList.filter(s =>
     s.status === 'menunggu-approval' &&
     (s.approvers || []).some(a => a.id === ME)
   );
-  const counts = {
-    total: toApprove.length,
-    sangatSegera: toApprove.filter(s => s.kecepatan === 'sangat-segera').length,
-    rahasia: toApprove.filter(s => s.sifat === 'rahasia' || s.sifat === 'sangat-rahasia').length,
-  };
 
   return (
     <div>
@@ -2375,34 +2365,20 @@ const ApproverPage = ({ suratList, onAction, currentUserId }) => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 0 }}>
-        {[
-          { label: 'Menunggu Approval', value: counts.total,        icon: 'check',  color: 'blue',  sub: 'surat perlu disetujui' },
-          { label: 'Sangat Segera',     value: counts.sangatSegera, icon: 'info',   color: 'red',   sub: 'prioritas tinggi'      },
-          { label: 'Rahasia / SR',      value: counts.rahasia,      icon: 'briefc', color: 'amber', sub: 'perlu perhatian khusus'},
-        ].map((s, i) => (
-          <div className="card kpi" key={i}>
-            <div className="kpi-head"><div className={`kpi-icon ${s.color}`}><Icon name={s.icon} size={24} strokeWidth={1.6}/></div></div>
-            <div className="kpi-label">{s.label}</div>
-            <div className="kpi-value tnum">{s.value}</div>
-            <div className="kpi-foot">{s.sub}</div>
-          </div>
-        ))}
-      </div>
-
       <div style={{ padding: '12px 16px', background: 'var(--info-bg)', borderRadius: 12, display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: '#004B6B' }}>
         <Icon name="info" size={16} strokeWidth={2} color="#006C9C" style={{ flexShrink: 0, marginTop: 1 }}/>
-        <span>Sebagai <b>Approver</b>, tugas Anda adalah memberikan persetujuan akhir atas surat yang telah melalui tahap review. Klik <b>Setujui</b> untuk mengesahkan, atau <b>Tolak</b> untuk mengembalikan ke Reviewer.</span>
+        <span>Sebagai <b>Approver</b>, tugas Anda adalah memberikan persetujuan akhir atas surat yang telah melalui tahap review.</span>
       </div>
 
       <SuratWorkflowTable
         title="Surat Menunggu Approval"
-        subtitle={`${counts.total} surat perlu disetujui oleh Anda`}
+        subtitle={`${toApprove.length} surat perlu disetujui oleh Anda`}
         emptyMsg="Tidak ada surat yang menunggu approval saat ini"
         suratList={toApprove}
         mode="approver"
         onAction={onAction}
         currentUserId={ME}
+        onOpenLetter={onOpenLetter}
       />
     </div>
   );
