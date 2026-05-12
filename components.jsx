@@ -661,7 +661,7 @@ const SuratAdvFilterModal = ({ value, onChange, onClose }) => {
   );
 };
 
-const SuratDetailModal = ({ surat, onClose, onWithdraw, onOpenLetter }) => {
+const SuratDetailModal = ({ surat, onClose, onWithdraw, onOpenLetter, reviewerMode }) => {
   const sif = SIFAT_CHIP[surat.sifat];
   const kec = KECEPATAN_CHIP[surat.kecepatan];
   const stat = STATUS_SURAT_CHIP[surat.status];
@@ -796,8 +796,12 @@ const SuratDetailModal = ({ surat, onClose, onWithdraw, onOpenLetter }) => {
             </div>
           )}
 
-          <div style={{ borderTop: '1px dashed var(--border)', paddingTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            {isMenungguReview && onWithdraw ? (
+          <div style={{ borderTop: '1px dashed var(--border)', paddingTop: 16, display: 'flex', justifyContent: reviewerMode ? 'flex-end' : 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            {reviewerMode ? (
+              <button type="button" className="btn btn-primary" onClick={handleOpenLetter}>
+                <Icon name="ext" size={14}/> Buka Surat
+              </button>
+            ) : isMenungguReview && onWithdraw ? (
               !confirmWithdraw ? (
                 <>
                   <button className="btn btn-secondary" onClick={onClose}>Tutup</button>
@@ -1375,7 +1379,7 @@ const SuratPanelHierarchy = ({ surat }) => {
   );
 };
 
-const BuatSuratBaru = ({ onBack, onSubmit, readOnly, surat, onWithdraw }) => {
+const BuatSuratBaru = ({ onBack, onSubmit, readOnly, surat, onWithdraw, reviewerActions }) => {
   const [jenis, setJenis] = React.useState('');
   const [template, setTemplate] = React.useState('');
   const [klasifikasi, setKlasifikasi] = React.useState('');
@@ -1400,6 +1404,7 @@ const BuatSuratBaru = ({ onBack, onSubmit, readOnly, surat, onWithdraw }) => {
   const fileInputRef = React.useRef(null);
   const dropzoneRef = React.useRef(null);
   const [confirmWithdrawDetail, setConfirmWithdrawDetail] = React.useState(false);
+  const [confirmReviewerAction, setConfirmReviewerAction] = React.useState(null); // 'approve'|'return-drafter'|'cancel'|null
 
   React.useEffect(() => {
     if (!readOnly || !surat) return;
@@ -1554,7 +1559,41 @@ const BuatSuratBaru = ({ onBack, onSubmit, readOnly, surat, onWithdraw }) => {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            {readOnly && awaitingReviewWithdraw ? (
+            {reviewerActions ? (
+              confirmReviewerAction ? (
+                (() => {
+                  const meta = {
+                    approve:          { msg: 'Setujui surat ini dan teruskan ke tahap berikutnya?', btnCls: 'btn-primary', btnStyle: { background: '#118D57', borderColor: '#118D57' }, label: 'Ya, Setujui', fn: reviewerActions.onApprove },
+                    'return-drafter': { msg: 'Kembalikan surat ke drafter untuk diperbaiki?',       btnCls: 'btn-secondary', btnStyle: {},                                                  label: 'Ya, Kembalikan', fn: reviewerActions.onReturn },
+                    cancel:           { msg: 'Batalkan surat ini? Tindakan tidak dapat diurungkan.', btnCls: 'btn-danger',   btnStyle: {},                                                  label: 'Ya, Batalkan', fn: reviewerActions.onCancel },
+                  }[confirmReviewerAction];
+                  return (
+                    <>
+                      <span style={{ fontSize: 13, color: 'var(--text-secondary)', marginRight: 4 }}>{meta.msg}</span>
+                      <button type="button" className="btn btn-secondary" onClick={() => setConfirmReviewerAction(null)}>Batal</button>
+                      <button type="button" className={`btn ${meta.btnCls}`} style={meta.btnStyle} onClick={() => { setConfirmReviewerAction(null); meta.fn(); }}>
+                        <Icon name="check" size={14} strokeWidth={2.4}/> {meta.label}
+                      </button>
+                    </>
+                  );
+                })()
+              ) : (
+                <>
+                  <button type="button" className="btn btn-danger"    onClick={() => setConfirmReviewerAction('cancel')}>
+                    <Icon name="x" size={14} strokeWidth={2.4}/> Batalkan
+                  </button>
+                  <button type="button" className="btn btn-secondary" onClick={() => setConfirmReviewerAction('return-drafter')}>
+                    <Icon name="chevl" size={14}/> Kembalikan
+                  </button>
+                  <button type="button" className="btn btn-secondary" onClick={reviewerActions.onSave}>
+                    <Icon name="download" size={14}/> Simpan
+                  </button>
+                  <button type="button" className="btn btn-primary"   style={{ background: '#118D57', borderColor: '#118D57' }} onClick={() => setConfirmReviewerAction('approve')}>
+                    <Icon name="check" size={14} strokeWidth={2.4}/> Setujui
+                  </button>
+                </>
+              )
+            ) : readOnly && awaitingReviewWithdraw ? (
               !confirmWithdrawDetail ? (
                 <button type="button" className="btn btn-danger" onClick={() => setConfirmWithdrawDetail(true)}>
                   <Icon name="x" size={14} strokeWidth={2.4}/> Tarik Kembali Surat
@@ -2255,14 +2294,17 @@ const SuratWorkflowTable = ({ title, subtitle, emptyMsg, suratList, mode, onActi
           surat={detailOpen}
           onClose={() => setDetailOpen(null)}
           onWithdraw={null}
-          onOpenLetter={null}
+          reviewerMode={mode === 'reviewer'}
+          onOpenLetter={mode === 'reviewer' && onOpenLetter
+            ? (s) => { setDetailOpen(null); onOpenLetter(s); }
+            : null}
         />
       )}
     </div>
   );
 };
 
-const ReviewerPage = ({ suratList, onAction, currentUserId }) => {
+const ReviewerPage = ({ suratList, onAction, currentUserId, onOpenLetter }) => {
   const ME = currentUserId || CURRENT_USER_ID;
   const toReview = suratList.filter(s =>
     s.status === 'menunggu-review' &&
@@ -2318,6 +2360,7 @@ const ReviewerPage = ({ suratList, onAction, currentUserId }) => {
         mode="reviewer"
         onAction={onAction}
         currentUserId={ME}
+        onOpenLetter={onOpenLetter}
       />
     </div>
   );

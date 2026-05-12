@@ -30,6 +30,7 @@ function App() {
   const [openedSurat, setOpenedSurat] = React.useState(null);
   const [flash, setFlash] = React.useState(null);
   const [povUserId, setPovUserId] = React.useState(POV_OPTIONS[0]?.id || CURRENT_USER_ID);
+  const [detailContext, setDetailContext] = React.useState(null); // null | 'reviewer'
   React.useEffect(() => { applyPalette(t.palette); }, [t.palette]);
 
   React.useEffect(() => {
@@ -102,16 +103,26 @@ function App() {
 
   const renderContent = () => {
     if (activeView === 'detail-surat' && openedSurat) {
+      const isReviewerCtx = detailContext === 'reviewer';
+      const handleBackFromDetail = () => {
+        setOpenedSurat(null);
+        setDetailContext(null);
+        setActiveView(isReviewerCtx ? 'reviewer' : 'manajemen-surat');
+      };
+      const reviewerActionsForSurat = isReviewerCtx ? {
+        onApprove: () => { handleReviewerAction(openedSurat.id, 'approve');        handleBackFromDetail(); },
+        onReturn:  () => { handleReviewerAction(openedSurat.id, 'return-drafter'); handleBackFromDetail(); },
+        onCancel:  () => { handleReviewerAction(openedSurat.id, 'cancel');         handleBackFromDetail(); },
+        onSave:    () => { handleBackFromDetail(); },
+      } : null;
       return (
         <BuatSuratBaru
           readOnly
           surat={openedSurat}
-          onBack={() => {
-            setOpenedSurat(null);
-            setActiveView('manajemen-surat');
-          }}
+          onBack={handleBackFromDetail}
           onSubmit={() => {}}
-          onWithdraw={handleWithdrawSurat}
+          onWithdraw={isReviewerCtx ? null : handleWithdrawSurat}
+          reviewerActions={reviewerActionsForSurat}
         />
       );
     }
@@ -166,7 +177,7 @@ function App() {
         </>
       );
     }
-    if (activeView === 'reviewer')        return <ReviewerPage suratList={suratList} onAction={handleReviewerAction} currentUserId={povUserId}/>;
+    if (activeView === 'reviewer')        return <ReviewerPage suratList={suratList} onAction={handleReviewerAction} currentUserId={povUserId} onOpenLetter={(s) => { setOpenedSurat(s); setDetailContext('reviewer'); setActiveView('detail-surat'); }}/>;
     if (activeView === 'approver')        return <ApproverPage suratList={suratList} onAction={handleApproverAction} currentUserId={povUserId}/>;
     if (activeView === 'inbox')           return <InboxPage/>;
     if (activeView === 'notif')           return <NotifikasiPage/>;
