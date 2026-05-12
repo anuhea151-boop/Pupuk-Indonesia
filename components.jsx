@@ -441,7 +441,7 @@ const DateRangeField = ({ from, to, onChange }) => {
   );
 };
 
-const SuratTable = ({ onNav, suratList, onWithdraw, onOpenLetter }) => {
+const SuratTable = ({ onNav, suratList, onWithdraw, onOpenLetter, currentUserId }) => {
   const data = suratList || SURAT;
   const [search, setSearch] = React.useState('');
   const [sifatFilter, setSifatFilter] = React.useState('all');
@@ -582,14 +582,20 @@ const SuratTable = ({ onNav, suratList, onWithdraw, onOpenLetter }) => {
       </div>
     </div>
 
-    {detailOpen && (
-      <SuratDetailModal
-        surat={detailOpen}
-        onClose={() => setDetailOpen(null)}
-        onWithdraw={onWithdraw ? (id) => { onWithdraw(id); } : null}
-        onOpenLetter={onOpenLetter || null}
-      />
-    )}
+    {detailOpen && (() => {
+      const me = currentUserId || CURRENT_USER_ID;
+      const isReviewerMode = detailOpen.status === 'menunggu-review' &&
+        (detailOpen.reviewers || []).some(r => r.id === me && r.reviewStatus === 'pending');
+      return (
+        <SuratDetailModal
+          surat={detailOpen}
+          onClose={() => setDetailOpen(null)}
+          onWithdraw={isReviewerMode ? null : (onWithdraw ? (id) => { onWithdraw(id); } : null)}
+          onOpenLetter={onOpenLetter || null}
+          reviewerMode={isReviewerMode}
+        />
+      );
+    })()}
     </>
   );
 };

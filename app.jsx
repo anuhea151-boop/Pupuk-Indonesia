@@ -169,8 +169,12 @@ function App() {
             onNav={setActiveView}
             suratList={visibleSurat}
             onWithdraw={handleWithdrawSurat}
+            currentUserId={povUserId}
             onOpenLetter={(s) => {
               setOpenedSurat(s);
+              const isPendingReviewer = s.status === 'menunggu-review' &&
+                (s.reviewers || []).some(r => r.id === povUserId && r.reviewStatus === 'pending');
+              setDetailContext(isPendingReviewer ? 'reviewer' : null);
               setActiveView('detail-surat');
             }}
           />
